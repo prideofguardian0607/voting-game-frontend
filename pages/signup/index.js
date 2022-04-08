@@ -114,24 +114,24 @@ import Snackbar from '@mui/material/Snackbar';
                     />
                     </Grid>
                     <Grid item xs={12}>
-                    <TextField
-                        required
-                        fullWidth
-                        id="email"
-                        label="E-Mail"
-                        name="email"
-                        autoComplete="email"
-                    />
+                      <TextField
+                          required
+                          fullWidth
+                          id="email"
+                          label="E-Mail"
+                          name="email"
+                          autoComplete="email"
+                      />
                     </Grid>
                     
                     <Grid item xs={12}>
-                        <Button
+                      <TextField
+                            required
                             fullWidth
-                            variant="contained"
-                            sx={{ mt: 2, mb: 2 }}
-                        >
-                            Refered by keeper username
-                        </Button>
+                            id="adminusername"
+                            label="Referred by Admin username"
+                            name="adminusername"
+                        />
                     </Grid>
                     <Grid item xs={12}>
                         <Link href='rule'>
