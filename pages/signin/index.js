@@ -13,6 +13,7 @@ import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import Typography from '@mui/material/Typography';
 import Container from '@mui/material/Container';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
+import axios from 'axios'
 
 const theme = createTheme();
 const Alert = React.forwardRef(function Alert(props, ref) {
@@ -24,25 +25,55 @@ export default function SignIn() {
   const handleSubmit = async (event) => {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
+    const username = data.get('username');
+    const password = data.get('password');
 
-    const res = await fetch('/api/auth/signin', {
-      method: 'POST',
-      headers: {
-          'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-          username: data.get('username'),
-          password: data.get('password'),
-      }),
-    });
-
-    const result = await res.json();
-    if(res.status == 200){
-      location.href = 'denomination';
-    }else{
+    if(username == ''){
       setOpen(true);
-      setMessage(result.message);
+      setMessage('You must enter the username');
+    }else if(password == '') {
+      setOpen(true);
+      setMessage('You must enter the password');
+    }else{
+      axios.post(`http://localhost:5000/user/signin/${ username }/${ password }`,
+		)
+		  .then(res => {
+        if(res.data.success === 'super'){
+          location.href = 'admin';
+        }else{
+          if(res.data == '') {
+            setOpen(true);
+            setMessage('Invalid User');
+          }
+          else {
+            location.href = 'denomination';
+          }
+        }
+		  })
     }
+
+    
+	  
+    
+
+    // const res = await fetch('/api/auth/signin', {
+    //   method: 'POST',
+    //   headers: {
+    //       'Content-Type': 'application/json',
+    //   },
+    //   body: JSON.stringify({
+    //       username: data.get('username'),
+    //       password: data.get('password'),
+    //   }),
+    // });
+
+    // const result = await res.json();
+    // if(res.status == 200){
+    //   location.href = 'denomination';
+    // }else{
+    //   setOpen(true);
+    //   setMessage(result.message);
+    // }
 
     localStorage.setItem('username', data.get('username'));
   };
@@ -86,6 +117,7 @@ export default function SignIn() {
               label="Game User Name"
               name="username"
               autoFocus
+              required
             />
             <TextField
               margin="normal"
@@ -95,6 +127,7 @@ export default function SignIn() {
               label="Password"
               type="password"
               id="password"
+              required
               autoComplete="current-password"
             />
             {/* <FormControlLabel

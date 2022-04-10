@@ -15,7 +15,7 @@ import Link from 'next/link';
 import MuiAlert from '@mui/material/Alert';
 import Stack from '@mui/material/Stack';
 import Snackbar from '@mui/material/Snackbar';
-
+import axios from 'axios'
   
   const theme = createTheme();
   
@@ -29,26 +29,42 @@ import Snackbar from '@mui/material/Snackbar';
       event.preventDefault();
       const data = new FormData(event.currentTarget);
 
-      const res = await fetch('/api/auth/signup', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            metausername: data.get('metausername'),
-            username: data.get('username'),
-            password: data.get('password'),
-            email: data.get('email'),
-        }),
-      });
+      const username = data.get('username');
+      const metausername = data.get('metausername');
+      const password = data.get('password');
+      const email = data.get('email');
 
-      // const result = await res.json();
-      // console.log(result);
-      if(res.status === 201){
-        setOpen(true);
-        setMessage("YOUR APPLICATION HAS BEEN SENT TO BE VERIFIED, AN E-MAIL WILL BE SENT TO YOU NOTIFYING YOU IF YOUR APPLICATION HAS BEEN APPROVED");
-        location.href = '/';
-      }
+      axios.post(`http://localhost:5000/user/signup/${ metausername }/${ username }/${ password }/${ email }`)
+      .then(res => {
+        if(res.data.success == true){
+          setMessage('Email sent');
+          setOpen(true);
+        } else {
+          setMessage('Email not sent');
+          setOpen(true);
+        }
+      })
+
+      // const res = await fetch('/api/auth/signup', {
+      //   method: 'POST',
+      //   headers: {
+      //       'Content-Type': 'application/json',
+      //   },
+      //   body: JSON.stringify({
+      //       metausername: data.get('metausername'),
+      //       username: data.get('username'),
+      //       password: data.get('password'),
+      //       email: data.get('email'),
+      //   }),
+      // });
+
+      // // const result = await res.json();
+      // // console.log(result);
+      // if(res.status === 201){
+      //   setOpen(true);
+      //   setMessage("YOUR APPLICATION HAS BEEN SENT TO BE VERIFIED, AN E-MAIL WILL BE SENT TO YOU NOTIFYING YOU IF YOUR APPLICATION HAS BEEN APPROVED");
+      //   location.href = '/';
+      // }
     };
 
     const [message, setMessage] = React.useState('');
@@ -114,24 +130,24 @@ import Snackbar from '@mui/material/Snackbar';
                     />
                     </Grid>
                     <Grid item xs={12}>
-                    <TextField
-                        required
-                        fullWidth
-                        id="email"
-                        label="E-Mail"
-                        name="email"
-                        autoComplete="email"
-                    />
+                      <TextField
+                          required
+                          fullWidth
+                          id="email"
+                          label="E-Mail"
+                          name="email"
+                          autoComplete="email"
+                      />
                     </Grid>
                     
                     <Grid item xs={12}>
-                        <Button
+                      <TextField
+                            required
                             fullWidth
-                            variant="contained"
-                            sx={{ mt: 2, mb: 2 }}
-                        >
-                            Refered by keeper username
-                        </Button>
+                            id="adminusername"
+                            label="Referred by Admin username"
+                            name="adminusername"
+                        />
                     </Grid>
                     <Grid item xs={12}>
                         <Link href='rule'>
