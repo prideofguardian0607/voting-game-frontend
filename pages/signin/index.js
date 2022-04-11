@@ -61,6 +61,7 @@ export default function SignIn() {
             }, 2000);
           }
           else {
+            console.log(res.data)
             Router.push('/denomination')
           }
         }
@@ -111,7 +112,6 @@ export default function SignIn() {
               label="Game User Name"
               name="username"
               autoFocus
-              required
             />
             <TextField
               margin="normal"
@@ -121,7 +121,6 @@ export default function SignIn() {
               label="Password"
               type="password"
               id="password"
-              required
               autoComplete="current-password"
             />
             {/* <FormControlLabel
