@@ -92,7 +92,7 @@ export default function SignIn() {
                     variant="contained"
                     sx={{ mt: 2, mb: 2 }}
                 >
-                    Log into existing game
+                    Log into game
                 </Button>
               </Grid>
             </Grid>

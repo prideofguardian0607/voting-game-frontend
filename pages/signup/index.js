@@ -12,16 +12,12 @@ import Typography from '@mui/material/Typography';
 import Container from '@mui/material/Container';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import Link from 'next/link';
-import MuiAlert from '@mui/material/Alert';
-import Stack from '@mui/material/Stack';
-import Snackbar from '@mui/material/Snackbar';
-import axios from 'axios'
+import Notification from '../components/notification';
+import axios from 'axios';
   
   const theme = createTheme();
   
-  const Alert = React.forwardRef(function Alert(props, ref) {
-    return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
-  });
+  
   
 
   export default function SignUp() {
@@ -34,43 +30,34 @@ import axios from 'axios'
       const password = data.get('password');
       const email = data.get('email');
 
-      axios.post(`http://localhost:5000/user/signup/${ metausername }/${ username }/${ password }/${ email }`)
-      .then(res => {
-        if(res.data.success == true){
-          setMessage('Email sent');
-          setOpen(true);
-        } else {
-          setMessage('Email not sent');
-          setOpen(true);
-        }
-      })
+      if(password.length < 6) {
+        setMessage('Password must be min 6 digits.');
+        setSeverity('warning')
+        setOpen(true);
+      } else {
+        axios.post(`http://localhost:5000/user/signup/${ metausername }/${ username }/${ password }/${ email }`)
+        .then(res => {
+          if(res.data.success == true){
+            setMessage('Email sent');
+            setSeverity('success');
+            setOpen(true);
+            
+          } else {
+            setMessage('Email not sent'); 
+            setSeverity('warning');
+            setOpen(true);
+          }
+        })
+      }
 
-      // const res = await fetch('/api/auth/signup', {
-      //   method: 'POST',
-      //   headers: {
-      //       'Content-Type': 'application/json',
-      //   },
-      //   body: JSON.stringify({
-      //       metausername: data.get('metausername'),
-      //       username: data.get('username'),
-      //       password: data.get('password'),
-      //       email: data.get('email'),
-      //   }),
-      // });
-
-      // // const result = await res.json();
-      // // console.log(result);
-      // if(res.status === 201){
-      //   setOpen(true);
-      //   setMessage("YOUR APPLICATION HAS BEEN SENT TO BE VERIFIED, AN E-MAIL WILL BE SENT TO YOU NOTIFYING YOU IF YOUR APPLICATION HAS BEEN APPROVED");
-      //   location.href = '/';
-      // }
+      
     };
 
     const [message, setMessage] = React.useState('');
 
     const [open, setOpen] = React.useState(false);
 
+    const [severity, setSeverity] = React.useState('success');
 
     const handleClose = (event, reason) => {
       if (reason === 'clickaway') {
@@ -78,7 +65,6 @@ import axios from 'axios'
       }
       setOpen(false);
     };
-
   
     return (
       <ThemeProvider theme={theme}>
@@ -96,7 +82,7 @@ import axios from 'axios'
               <LockOutlinedIcon />
             </Avatar>
             <Typography component="h1" variant="h5">
-              New User
+              New Admin
             </Typography>
             <Box component="form" noValidate onSubmit={handleSubmit} sx={{ mt: 3 }}>
                 <Grid container spacing={2}>
@@ -114,7 +100,7 @@ import axios from 'axios'
                         required
                         fullWidth
                         id="username"
-                        label="Game User Name"
+                        label="Existing Game User Name"
                         name="username"
                     />
                     </Grid>
@@ -123,7 +109,7 @@ import axios from 'axios'
                         required
                         fullWidth
                         name="password"
-                        label="Password"
+                        label="Create New Password"
                         type="password"
                         id="password"
                         autoComplete="new-password"
@@ -145,7 +131,7 @@ import axios from 'axios'
                             required
                             fullWidth
                             id="adminusername"
-                            label="Referred by Admin username"
+                            label="Referred by Existing Admin Username"
                             name="adminusername"
                         />
                     </Grid>
@@ -192,13 +178,7 @@ import axios from 'axios'
             </Box>
           </Box>
           
-          <Stack spacing={2} sx={{ width: '100%' }}>
-            <Snackbar open={open} autoHideDuration={6000} onClose={handleClose}>
-              <Alert onClose={handleClose} severity="success" sx={{ width: '100%' }}>
-                {message}
-              </Alert>
-            </Snackbar>
-          </Stack>
+          <Notification open={open} message={message} severity={severity} handleClose={handleClose} />
 
         </Container>
       </ThemeProvider>

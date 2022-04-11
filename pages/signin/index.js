@@ -13,6 +13,7 @@ import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import Typography from '@mui/material/Typography';
 import Container from '@mui/material/Container';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
+import Notification from '../components/notification';
 import axios from 'axios'
 
 const theme = createTheme();
@@ -29,20 +30,27 @@ export default function SignIn() {
     const password = data.get('password');
 
     if(username == ''){
-      setOpen(true);
+      setOpenNotify(true);
+      setSeverity('warning');
       setMessage('You must enter the username');
     }else if(password == '') {
-      setOpen(true);
+      setOpenNotify(true);
+      setSeverity('warning');
       setMessage('You must enter the password');
+    }else if(password.length < 6){
+      setOpenNotify(true);
+      setSeverity('warning');
+      setMessage('Password must be at least 6 digits');
     }else{
-      axios.post(`http://localhost:5000/user/signin/${ username }/${ password }`,
-		)
+      axios.post(`http://localhost:5000/user/signin/${ username }/${ password }`
+		  )
 		  .then(res => {
         if(res.data.success === 'super'){
           location.href = 'admin';
         }else{
           if(res.data == '') {
-            setOpen(true);
+            setOpenNotify(true);
+            setSeverity('warning');
             setMessage('Invalid User');
           }
           else {
@@ -52,42 +60,21 @@ export default function SignIn() {
 		  })
     }
 
-    
-	  
-    
-
-    // const res = await fetch('/api/auth/signin', {
-    //   method: 'POST',
-    //   headers: {
-    //       'Content-Type': 'application/json',
-    //   },
-    //   body: JSON.stringify({
-    //       username: data.get('username'),
-    //       password: data.get('password'),
-    //   }),
-    // });
-
-    // const result = await res.json();
-    // if(res.status == 200){
-    //   location.href = 'denomination';
-    // }else{
-    //   setOpen(true);
-    //   setMessage(result.message);
-    // }
-
     localStorage.setItem('username', data.get('username'));
   };
 
+  //Notification handle
   const [message, setMessage] = React.useState('');
 
-  const [open, setOpen] = React.useState(false);
+  const [openNotify, setOpenNotify] = React.useState(false);
 
+  const [severity, setSeverity] = React.useState('success');
 
-  const handleClose = (event, reason) => {
+  const notifyHandleClose = (event, reason) => {
     if (reason === 'clickaway') {
       return;
     }
-    setOpen(false);
+    setOpenNotify(false);
   };
 
   return (
@@ -159,14 +146,8 @@ export default function SignIn() {
             </Grid>
           </Box>
         </Box>
-        <Stack spacing={2} sx={{ width: '100%' }}>
-          <Snackbar open={open} autoHideDuration={6000} onClose={handleClose}>
-            <Alert onClose={handleClose} severity="success" sx={{ width: '100%' }}>
-              {message}
-            </Alert>
-          </Snackbar>
-        </Stack>
       </Container>
+      <Notification open={openNotify} message={message} severity={severity} handleClose={notifyHandleClose} />  
     </ThemeProvider>
   );
 }

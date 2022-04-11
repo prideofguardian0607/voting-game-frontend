@@ -26,11 +26,12 @@ import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
+import Grid from '@mui/material/Grid';
+import axios from 'axios';
+import Notification from '../components/notification';
 
 
 const theme = createTheme();
-
-
 
 function TablePaginationActions(props) {
   const theme = useTheme();
@@ -96,15 +97,15 @@ const StyledTableCell = styled(TableCell)(({ theme }) => ({
     },
   }));
   
-  const StyledTableRow = styled(TableRow)(({ theme }) => ({
+const StyledTableRow = styled(TableRow)(({ theme }) => ({
     '&:nth-of-type(odd)': {
-      backgroundColor: theme.palette.action.hover,
+    backgroundColor: theme.palette.action.hover,
     },
     // hide last border
     '&:last-child td, &:last-child th': {
-      border: 0,
+    border: 0,
     },
-  }));
+}));
 
 TablePaginationActions.propTypes = {
   count: PropTypes.number.isRequired,
@@ -117,21 +118,7 @@ function createData(name, calories, fat) {
   return { name, calories, fat };
 }
 
-const rows = [
-  createData('Cupcake', 305, 3.7),
-  createData('Donut', 452, 25.0),
-  createData('Eclair', 262, 16.0),
-  createData('Frozen yoghurt', 159, 6.0),
-  createData('Gingerbread', 356, 16.0),
-  createData('Honeycomb', 408, 3.2),
-  createData('Ice cream sandwich', 237, 9.0),
-  createData('Jelly Bean', 375, 0.0),
-  createData('KitKat', 518, 26.0),
-  createData('Lollipop', 392, 0.2),
-  createData('Marshmallow', 318, 0),
-  createData('Nougat', 360, 19.0),
-  createData('Oreo', 437, 18.0),
-].sort((a, b) => (a.calories < b.calories ? -1 : 1));
+
 
 export default function Admin() {
 
@@ -141,141 +128,346 @@ export default function Admin() {
     const [gameusername, setGameUserName] = React.useState('');
     const [password, setPassword] = React.useState('');
     const [email, setEmail] = React.useState('');
+    const [referredby, setReferredby] = React.useState('');
+    const [rows, setRows] = React.useState([]);
+    
+    const [id, setId] = React.useState(0);
 
-    const [buttonName, SetButtonName] = React.useState('update');
-    var index = 0;
+    const SetAdminInfo = (_id, metausername, gameusername, password, email, referredby) => {
+        setId(_id);
+        setMetaUserName(metausername);
+        setGameUserName(gameusername);
+        setPassword(password);
+        setEmail(email);
+        setReferredby(referredby);
+    };
 
+    // Once render when fetch from database
+    React.useEffect(() => {
+        axios.get('http://localhost:5000/user'
+        ).then(res => {
+            setRows(res.data.sort((a, b) => (a.calories < b.calories ? -1 : 1)))
+            console.log(res.data)
+        })
+    }, [])
+
+    // alert handle
     const handleClose = () => {
         setOpen(false);
     };
+
+    const [buttonName, SetButtonName] = React.useState('update');
+
+    const IsValid = () => {
+        if (metausername === '') {
+            setMessage('Meta Username is required.');
+            setOpenNotify(true);
+            setSeverity('warning');
+            return false;
+        } else if (gameusername === '') {
+            setMessage('Game Username is required.');
+            setOpenNotify(true);
+            setSeverity('warning');
+            return false;
+        }else if(password.length < 6) {
+            if(password.length == 0){
+                setMessage('Password is required.');
+                setOpenNotify(true);
+                setSeverity('warning');
+            } else {
+                setMessage('Password must be at least 6 digits.');
+                setOpenNotify(true);
+                setSeverity('warning');
+            }
+            
+            return false;
+        } else if( email === ''){
+            setMessage('Email is required.');
+            setOpenNotify(true);
+            setSeverity('warning');
+            return false;
+        } else if( !email.includes('@') ) {
+            setMessage('Invalid Email');
+            setOpenNotify(true);
+            setSeverity('warning');
+            return false;
+        } else if( referredby === ''){
+            setMessage('Referredby is required.');
+            setOpenNotify(true);
+            setSeverity('warning');
+            return false;
+        }
+        return true;
+    }
+
     const UpdateAdminInfo = () => {
-        handleClose();
+        if(IsValid()){
+            axios.put(`${process.env.API_URL}user/${id}/${ metausername }/${ gameusername }/${ password }/${ email }/${ referredby }`
+            ).then(res => {
+                if(res.data.success)
+                {
+                    let index = rows.findIndex((row) => {
+                        return row._id == id;
+                    })
+                    console.log(index)
+                    rows.splice(index, 1, {
+                        metausername: metausername, 
+                        username: gameusername, 
+                        password: password, 
+                        email: email,
+                        referredby: referredby
+                    })
+                    setRows(rows);
+                    setMessage('Admin was updated.');
+                    setSeverity('success');
+                    setOpenNotify(true);
+                } else {
+                    setMessage('Admin was not updated.');
+                    setSeverity('warning');
+                    setOpenNotify(true);
+                }
+            });
+            handleClose();
+        }
      };
 
+    const CreateAdminInfo = () => {
+    if(IsValid()){
+        axios.post(`${process.env.API_URL}user/${ metausername }/${ gameusername }/${ password }/${ email }/${ referredby }`
+        ).then(res => {
+            
+            if(res.data.success)
+            {
+                rows.splice(0, 0, res.data.user);
+                setRows(rows);
+                setMessage('New Admin was created.');
+                setSeverity('success');
+                setOpenNotify(true);
+            } else {
+                setMessage('Admin Info alrady exists.');
+                setSeverity('warning');
+                setOpenNotify(true);
+            }
+        });
+        handleClose();
+    }
+    }
 
-  const [page, setPage] = React.useState(0);
-  const [rowsPerPage, setRowsPerPage] = React.useState(5);
+    const DeleteAdminInfo = () => {
+        
+        axios.delete(`${process.env.API_URL}user/${id}`).
+        then((res) => {
+            let index = rows.findIndex((row) => {
+                return row._id == id;
+            });
+            rows.splice(index, 1);
+            setRows(rows);
+            setMessage('Admin was deleted.');
+            setSeverity('warning');
+            setOpenNotify(true);
+        });
+        setOpen(false);
+    };
 
-  // Avoid a layout jump when reaching the last page with empty rows.
-  const emptyRows =
-    page > 0 ? Math.max(0, (1 + page) * rowsPerPage - rows.length) : 0;
+    // table handle
+    const [page, setPage] = React.useState(0);
+    const [rowsPerPage, setRowsPerPage] = React.useState(5);
 
-  const handleChangePage = (event, newPage) => {
-    setPage(newPage);
-  };
+    // Avoid a layout jump when reaching the last page with empty rows.
+    const emptyRows =
+        page > 0 ? Math.max(0, (1 + page) * rowsPerPage - rows.length) : 0;
 
-  const handleChangeRowsPerPage = (event) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
-  };
+    const handleChangePage = (event, newPage) => {
+        setPage(newPage);
+    };
 
-  return (
-    <ThemeProvider theme={theme}>
-        <Container component="main" maxWidth="lg" >
-            <CssBaseline />
-            <TableContainer component={Paper}>
-                <Table sx={{ minWidth: 500 }} aria-label="custom pagination table">
-                <TableHead>
-                    <TableRow>
-                        <StyledTableCell>No</StyledTableCell>
-                        <StyledTableCell align="center">Meta Username</StyledTableCell>
-                        <StyledTableCell align="center">Username</StyledTableCell>
-                        <StyledTableCell align="center">Password</StyledTableCell>
-                        <StyledTableCell align="center">ReferredBy</StyledTableCell>
-                    </TableRow>
-                </TableHead>
-                    <TableBody>
-                    {(rowsPerPage > 0
-                        ? rows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                        : rows
-                    ).map((row) => (
-                        <TableRow key={row.name}>
-                        <TableCell component="th" scope="row">
-                            {row.name}
-                        </TableCell>
-                        <TableCell style={{ width: 160 }} align="center">
-                            {row.calories}
-                        </TableCell>
-                        <TableCell style={{ width: 160 }} align="center">
-                            {row.fat}
-                        </TableCell>
+    const handleChangeRowsPerPage = (event) => {
+        setRowsPerPage(parseInt(event.target.value, 10));
+        setPage(0);
+    };
+
+    //Notification handle
+    const [message, setMessage] = React.useState('');
+
+    const [openNotify, setOpenNotify] = React.useState(false);
+
+    const [severity, setSeverity] = React.useState('success');
+
+    const notifyHandleClose = (event, reason) => {
+      if (reason === 'clickaway') {
+        return;
+      }
+      setOpenNotify(false);
+    };
+
+    return (
+        <ThemeProvider theme={theme}>
+            <Container component="main" maxWidth="lg" >
+                <CssBaseline />
+                <Grid container >
+                    <Grid item xs={9} />
+                    <Grid item xs={2} p={3}>
+                        <Button                
+                            fullWidth
+                            variant="contained"
+                            sx={{ mt: 2, mb: 2 }}
+                            onClick={() => {
+                                SetButtonName('Create');
+                                setOpen(true);
+                                SetAdminInfo('', '', '', '', '');
+                            }}
+                        >
+                            Add Admin
+                        </Button>
+                    </Grid>
+                </Grid>
+                <TableContainer component={Paper}>
+                    <Table sx={{ minWidth: 500 }} aria-label="custom pagination table">
+                    <TableHead>
+                        <TableRow>
+                            <StyledTableCell>No</StyledTableCell>
+                            <StyledTableCell align="center">Meta Username</StyledTableCell>
+                            <StyledTableCell align="center">Username</StyledTableCell>
+                            <StyledTableCell align="center">Password</StyledTableCell>
+                            <StyledTableCell align="center">Email</StyledTableCell>
+                            <StyledTableCell align="center">ReferredBy</StyledTableCell>
                         </TableRow>
-                    ))}
+                    </TableHead>
+                        <TableBody>
+                        {(rowsPerPage > 0
+                            ? rows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                            : rows
+                        ).map((row, index) => (
+                            <TableRow key={index} onClick={() => {
+                                SetAdminInfo(row._id, row.metausername, row.username, row.password, row.email, row.referredby);
+                                SetButtonName('update');
+                                setOpen(true);
+                            }}>
+                                <TableCell component="th" scope="row">
+                                    {index + 1}
+                                </TableCell>
+                                <TableCell component="th" scope="row">
+                                    {row.metausername}
+                                </TableCell>
+                                <TableCell style={{ width: 160 }} align="center">
+                                    {row.username}
+                                </TableCell>
+                                <TableCell style={{ width: 160 }} align="center">
+                                    {row.password}
+                                </TableCell>
+                                <TableCell style={{ width: 160 }} align="center">
+                                    {row.email}
+                                </TableCell>
+                                <TableCell style={{ width: 160 }} align="center">
+                                    {row.referredby}
+                                </TableCell>
+                            </TableRow>
+                        ))}
 
-                    {emptyRows > 0 && (
-                        <TableRow style={{ height: 53 * emptyRows }}>
-                            <TableCell colSpan={6} />
+                        {emptyRows > 0 && (
+                            <TableRow style={{ height: 53 * emptyRows }}>
+                                <TableCell colSpan={6} />
+                            </TableRow>
+                        )}
+                        </TableBody>
+                        <TableFooter>
+                        <TableRow>
+                            <TablePagination
+                            rowsPerPageOptions={[5, 10, 25, { label: 'All', value: -1 }]}
+                            colSpan={3}
+                            count={rows.length}
+                            rowsPerPage={rowsPerPage}
+                            page={page}
+                            SelectProps={{
+                                inputProps: {
+                                'aria-label': 'rows per page',
+                                },
+                                native: true,
+                            }}
+                            onPageChange={handleChangePage}
+                            onRowsPerPageChange={handleChangeRowsPerPage}
+                            ActionsComponent={TablePaginationActions}
+                            />
                         </TableRow>
-                    )}
-                    </TableBody>
-                    <TableFooter>
-                    <TableRow>
-                        <TablePagination
-                        rowsPerPageOptions={[5, 10, 25, { label: 'All', value: -1 }]}
-                        colSpan={3}
-                        count={rows.length}
-                        rowsPerPage={rowsPerPage}
-                        page={page}
-                        SelectProps={{
-                            inputProps: {
-                            'aria-label': 'rows per page',
-                            },
-                            native: true,
+                        </TableFooter>
+                    </Table>
+                    </TableContainer>
+            </Container>
+            <Dialog open={open} onClose={handleClose}>
+                <DialogTitle>Update Admin Information</DialogTitle>
+                <DialogContent>
+                    <TextField
+                        autoFocus
+                        fullWidth
+                        margin="dense"
+                        id="metausername"
+                        label="Meta User Name"
+                        variant="standard"
+                        onChange={(e) => {
+                            setMetaUserName(e.target.value)
                         }}
-                        onPageChange={handleChangePage}
-                        onRowsPerPageChange={handleChangeRowsPerPage}
-                        ActionsComponent={TablePaginationActions}
-                        />
-                    </TableRow>
-                    </TableFooter>
-                </Table>
-                </TableContainer>
-        </Container>
-        <Dialog open={open} onClose={handleClose}>
-            <DialogTitle>Update Admin Information</DialogTitle>
-            <DialogContent>
-                <TextField
-                    autoFocus
-                    fullWidth
-                    margin="dense"
-                    id="metausername"
-                    label="Meta User Name"
-                    variant="standard"
-                    value={metausername}
-                />
-                <TextField
-                    margin="dense"
-                    id="name"
-                    label="Game User Name"
-                    fullWidth
-                    variant="standard"
-                    value={gameusername}
-                />
-                <TextField
-                    margin="dense"
-                    id="password"
-                    label="Password"
-                    type="password"
-                    fullWidth
-                    variant="standard"
-                    value={password}
-                />
-                <TextField
-                    margin="dense"
-                    id="email"
-                    label="Email"
-                    type="email"
-                    fullWidth
-                    variant="standard"
-                    value={email}
-                />
-            </DialogContent>
-            <DialogActions>
-                <Button onClick={handleClose}>Cancel</Button>
-                <Button onClick={UpdateAdminInfo}>{buttonName}</Button>
-            </DialogActions>
-        </Dialog>        
-    </ThemeProvider>
-    
-  );
+                        value={metausername}
+                    />
+                    <TextField
+                        margin="dense"
+                        id="name"
+                        label="Game User Name"
+                        fullWidth
+                        variant="standard"
+                        onChange={(e) => {
+                            setGameUserName(e.target.value)
+                        }}
+                        value={gameusername}
+                    />
+                    <TextField
+                        margin="dense"
+                        id="password"
+                        label="Password"
+                        fullWidth
+                        variant="standard"
+                        onChange={(e) => {
+                            setPassword(e.target.value)
+                        }}
+                        value={password}
+                    />
+                    <TextField
+                        margin="dense"
+                        id="email"
+                        label="Email"
+                        type="email"
+                        fullWidth
+                        variant="standard"
+                        onChange={(e) => {
+                            setEmail(e.target.value)
+                        }}
+                        value={email}
+                    />
+                    <TextField
+                        margin="dense"
+                        id="referredby"
+                        label="Referredby"
+                        type="referredby"
+                        fullWidth
+                        variant="standard"
+                        onChange={(e) => {
+                            setReferredby(e.target.value)
+                        }}
+                        value={referredby}
+                    />
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleClose}>Cancel</Button>
+                    <Button onClick={DeleteAdminInfo}  color='error'>Delete</Button>
+                    <Button onClick={() => {
+                        if(buttonName === 'update')
+                            UpdateAdminInfo();
+                        else
+                            CreateAdminInfo();
+                    }} color='primary' variant='outlined'>{buttonName}</Button>
+                </DialogActions>
+            </Dialog>      
+            <Notification open={openNotify} message={message} severity={severity} handleClose={notifyHandleClose} />  
+        </ThemeProvider>
+        
+    );
 }
