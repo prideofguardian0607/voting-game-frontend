@@ -14,6 +14,7 @@ import { createTheme, ThemeProvider } from '@mui/material/styles';
 import Link from 'next/link';
 import Notification from '../components/notification';
 import axios from 'axios';
+import Router from 'next/router'
   
   const theme = createTheme();
   
@@ -48,6 +49,9 @@ import axios from 'axios';
             setOpen(true);
           }
         })
+        setTimeout(() => {
+          Router.push('/');
+        }, 2000);
       }
 
       

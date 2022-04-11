@@ -15,6 +15,8 @@ import Container from '@mui/material/Container';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import Notification from '../components/notification';
 import axios from 'axios'
+import cookieCutter from 'cookie-cutter'
+import Router from 'next/router'
 
 const theme = createTheme();
 const Alert = React.forwardRef(function Alert(props, ref) {
@@ -46,15 +48,20 @@ export default function SignIn() {
 		  )
 		  .then(res => {
         if(res.data.success === 'super'){
-          location.href = 'admin';
+          Router.push('admin');
+          //location.href = 'admin';
         }else{
           if(res.data == '') {
             setOpenNotify(true);
             setSeverity('warning');
             setMessage('Invalid User');
+            cookieCutter.set('username', username, { expires: new Date(0) })
+            setTimeout(() => {
+              Router.push('/');
+            }, 2000);
           }
           else {
-            location.href = 'denomination';
+            Router.push('/denomination')
           }
         }
 		  })

@@ -7,6 +7,7 @@ import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Container from '@mui/material/Container';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
+import Router from 'next/router'
 
 const theme = createTheme();
 
@@ -46,8 +47,9 @@ export default function SignIn() {
     // },
   ];
 
-  const LogIntoExistingGame = () => {
-    location.href = 'signin';
+  const LogIntoGame = () => {
+    //location.href = 'signin';
+    Router.push('connectwallet')
   };
 
   return (
@@ -86,13 +88,12 @@ export default function SignIn() {
               }
               <Grid item xs={12}>
                 <Button
-                    onClick={LogIntoExistingGame}
-                    type="submit"
+                  onClick={LogIntoGame}
                     fullWidth
                     variant="contained"
                     sx={{ mt: 2, mb: 2 }}
                 >
-                    Log into game
+                    Log Into Game
                 </Button>
               </Grid>
             </Grid>

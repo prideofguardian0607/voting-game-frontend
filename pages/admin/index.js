@@ -29,7 +29,8 @@ import DialogTitle from '@mui/material/DialogTitle';
 import Grid from '@mui/material/Grid';
 import axios from 'axios';
 import Notification from '../components/notification';
-
+import cookieCutter from 'cookie-cutter'
+import { useSession, getSession } from 'next-auth/react'
 
 const theme = createTheme();
 
@@ -119,7 +120,6 @@ function createData(name, calories, fat) {
 }
 
 
-
 export default function Admin() {
 
     const [open, setOpen] = React.useState(false);
@@ -142,13 +142,17 @@ export default function Admin() {
         setReferredby(referredby);
     };
 
+    //const { data: session, status } = useSession();
+    
+
     // Once render when fetch from database
-    React.useEffect(() => {
+    React.useEffect(async () => {
         axios.get('http://localhost:5000/user'
         ).then(res => {
             setRows(res.data.sort((a, b) => (a.calories < b.calories ? -1 : 1)))
-            console.log(res.data)
+            //console.log(res.data)
         })
+
     }, [])
 
     // alert handle
@@ -202,7 +206,7 @@ export default function Admin() {
 
     const UpdateAdminInfo = () => {
         if(IsValid()){
-            axios.put(`${process.env.API_URL}user/${id}/${ metausername }/${ gameusername }/${ password }/${ email }/${ referredby }`
+            axios.put(`http://localhost:5000/user/${id}/${ metausername }/${ gameusername }/${ password }/${ email }/${ referredby }`
             ).then(res => {
                 if(res.data.success)
                 {
@@ -233,7 +237,7 @@ export default function Admin() {
 
     const CreateAdminInfo = () => {
     if(IsValid()){
-        axios.post(`${process.env.API_URL}user/${ metausername }/${ gameusername }/${ password }/${ email }/${ referredby }`
+        axios.post(`http://localhost:5000/user/${ metausername }/${ gameusername }/${ password }/${ email }/${ referredby }`
         ).then(res => {
             
             if(res.data.success)
@@ -255,7 +259,7 @@ export default function Admin() {
 
     const DeleteAdminInfo = () => {
         
-        axios.delete(`${process.env.API_URL}user/${id}`).
+        axios.delete(`http://localhost:5000/user/${id}`).
         then((res) => {
             let index = rows.findIndex((row) => {
                 return row._id == id;
@@ -263,7 +267,7 @@ export default function Admin() {
             rows.splice(index, 1);
             setRows(rows);
             setMessage('Admin was deleted.');
-            setSeverity('warning');
+            setSeverity('success');
             setOpenNotify(true);
         });
         setOpen(false);
@@ -314,7 +318,7 @@ export default function Admin() {
                             onClick={() => {
                                 SetButtonName('Create');
                                 setOpen(true);
-                                SetAdminInfo('', '', '', '', '');
+                                SetAdminInfo('', '', '', '', '','');
                             }}
                         >
                             Add Admin

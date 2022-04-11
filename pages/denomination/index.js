@@ -12,6 +12,7 @@ import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import Typography from '@mui/material/Typography';
 import Container from '@mui/material/Container';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
+import Router from 'next/router';
 
 const theme = createTheme();
 
@@ -46,17 +47,15 @@ export default function Denomination() {
   const ConfirmAmount = () => {
     GenerateAdminGameCode();
 
-    location.href = 'connectwallet';
+    Router.router.push()
   };
 
   const OwnAmount = () => {
 
-    
-
   };
 
   const GenerateAdminGameCode = () => {
-
+    Router.push('connectwallet');
   };
 
   return (
