@@ -29,8 +29,7 @@ import DialogTitle from '@mui/material/DialogTitle';
 import Grid from '@mui/material/Grid';
 import axios from 'axios';
 import Notification from '../components/notification';
-import cookieCutter from 'cookie-cutter'
-import { useSession, getSession } from 'next-auth/react'
+import Navbar from '../components/navbar';
 
 const theme = createTheme();
 
@@ -115,9 +114,6 @@ TablePaginationActions.propTypes = {
   rowsPerPage: PropTypes.number.isRequired,
 };
 
-function createData(name, calories, fat) {
-  return { name, calories, fat };
-}
 
 
 export default function Admin() {
@@ -306,6 +302,7 @@ export default function Admin() {
 
     return (
         <ThemeProvider theme={theme}>
+            <Navbar title="Admin Management" username={username}  />
             <Container component="main" maxWidth="lg" >
                 <CssBaseline />
                 <Grid container >

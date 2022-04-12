@@ -16,27 +16,68 @@ import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import Typography from '@mui/material/Typography';
 import Container from '@mui/material/Container';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
-
- 
+import Router from 'next/router';
+import axios from 'axios';
+import Navbar from '../components/navbar';
 
 
 const theme = createTheme();
 
 export default function ConnectWallet() {
 
+  const [ username, setUsername] = React.useState('');
+
+  const [ code, setCode ] = React.useState('');
   // const { connectWallet, address, error } = useWeb3();
 
   const PayAndStartGame = () => {
-    location.href = '/vote';
+    Router.push('vote');
   };
 
   const Connect = () => {
-
   }
   
+  React.useEffect(async () => {
+    if(username === '')
+    {
+        let isLoggin = await GetUserInfo();
+        // if(!isLoggin)
+        //   Router.push('signin');
+    }
+          
+  }, [username]);
+
+  const GetUserInfo = async () => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      try {
+        const res = await axios.get('http://localhost:5000/user/valid', {
+          headers: {
+            "x-access-token": token
+          }
+        });
+        
+        setUsername(res.data.user.username);
+        setCode(res.data.user.code);
+        return res.data.isLoggedIn;
+      } catch (err) {
+        console.error(err);
+      }
+    } else {
+      delete axios.defaults.headers.common['x-access-token'];
+      return false;
+    }
+  }
+
+  const codeElement = () => {
+    <Typography component="h3" variant="h5">
+      {code}
+    </Typography>
+  }
 
   return (
     <ThemeProvider theme={theme}>
+      <Navbar title="Connect Wallet" username={username}  />
       <Container component="main" maxWidth="xs">
         <CssBaseline />
         <Box
@@ -51,6 +92,8 @@ export default function ConnectWallet() {
           <Typography component="h1" variant="h5">
             Connect wallet
           </Typography>
+          {codeElement}
+          
           <Box component="form" noValidate sx={{ mt: 1 }}>
             <Button
               fullWidth

@@ -47,29 +47,59 @@ export default function SignIn() {
       axios.post(`http://localhost:5000/user/signin/${ username }/${ password }`
 		  )
 		  .then(res => {
-        if(res.data.success === 'super'){
-          Router.push('admin');
-          //location.href = 'admin';
+
+        if(res.data.success === 'super'){ // in case of user is super admin
+          Router.push('/admin');
         }else{
-          if(res.data == '') {
-            setOpenNotify(true);
-            setSeverity('warning');
-            setMessage('Invalid User');
-            cookieCutter.set('username', username, { expires: new Date(0) })
-            setTimeout(() => {
-              Router.push('/');
-            }, 2000);
+          if(res.data.success == 'player') { // in case of user is player
+            Router.push('/connectwallet')
           }
-          else {
+          else { // in case of user is admin
             console.log(res.data)
+            localStorage.setItem('token', res.data.token)
             Router.push('/denomination')
           }
         }
 		  })
     }
 
-    localStorage.setItem('username', data.get('username'));
   };
+// validation
+  React.useEffect(async () => {
+    let info = await GetUserInfo();
+    
+    if(info.isLoggedIn) {
+      if(info.level == 'super') {
+        Router.push('/admin');
+      } else if(info.level == 'admin') {
+        Router.push('/denomination');
+      } else {
+        Router.push('connectwallet');
+      }
+    }
+      
+  }, []);
+
+  const GetUserInfo = async () => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      try {
+        const res = await axios.get('http://localhost:5000/user/valid', {
+          headers: {
+            "x-access-token": token
+          }
+        });
+        console.log(res)
+        return { isLoggedIn: res.data.isLoggedIn, level: res.data.user.level };
+      } catch (err) {
+        console.error(err);
+      }
+    } else {
+      delete axios.defaults.headers.common['x-access-token'];
+      return { isLoggedIn: false };
+    }
+  }
+
 
   //Notification handle
   const [message, setMessage] = React.useState('');
