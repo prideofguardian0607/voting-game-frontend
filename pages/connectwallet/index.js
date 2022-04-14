@@ -31,7 +31,11 @@ export default function ConnectWallet() {
   // const { connectWallet, address, error } = useWeb3();
 
   const PayAndStartGame = () => {
-    Router.push('vote');
+    axios.post(`http://localhost:5000/game/pay/${code}`).then(res => {
+      if(res.data.success)
+        Router.push('vote');
+    })
+    
   };
 
   const Connect = () => {
@@ -41,6 +45,7 @@ export default function ConnectWallet() {
     if(username === '')
     {
         let isLoggin = await GetUserInfo();
+        
         // if(!isLoggin)
         //   Router.push('signin');
     }
@@ -49,17 +54,33 @@ export default function ConnectWallet() {
 
   const GetUserInfo = async () => {
     const token = localStorage.getItem('token');
+    let username_temp = '';
     if (token) {
       try {
-        const res = await axios.get('http://localhost:5000/user/valid', {
+        let res = await axios.get('http://localhost:5000/user/valid', {
           headers: {
             "x-access-token": token
           }
         });
         
         setUsername(res.data.user.username);
-        setCode(res.data.user.code);
-        return res.data.isLoggedIn;
+        username_temp = res.data.user.username;
+
+        if(res.data.user.code) // in case of user
+        {
+          setCode(res.data.user.code);
+        }
+          
+        else // in case of admin
+        {
+          res = await axios.get(`http://localhost:5000/game/getcode/${username_temp}`);
+          console.log(res)
+          let temp_code = res.data.code;
+          if(temp_code.length < 5)
+            temp_code += "00";
+          setCode(temp_code);
+        }
+        return true;
       } catch (err) {
         console.error(err);
       }
@@ -69,15 +90,10 @@ export default function ConnectWallet() {
     }
   }
 
-  const codeElement = () => {
-    <Typography component="h3" variant="h5">
-      {code}
-    </Typography>
-  }
 
   return (
     <ThemeProvider theme={theme}>
-      <Navbar title="Connect Wallet" username={username}  />
+      <Navbar title="Connect Wallet" username={`${username}(${code})`}  />
       <Container component="main" maxWidth="xs">
         <CssBaseline />
         <Box
@@ -92,7 +108,6 @@ export default function ConnectWallet() {
           <Typography component="h1" variant="h5">
             Connect wallet
           </Typography>
-          {codeElement}
           
           <Box component="form" noValidate sx={{ mt: 1 }}>
             <Button

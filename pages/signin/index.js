@@ -15,13 +15,9 @@ import Container from '@mui/material/Container';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import Notification from '../components/notification';
 import axios from 'axios'
-import cookieCutter from 'cookie-cutter'
 import Router from 'next/router'
 
 const theme = createTheme();
-const Alert = React.forwardRef(function Alert(props, ref) {
-  return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
-});
 
 
 export default function SignIn() {
@@ -30,7 +26,7 @@ export default function SignIn() {
     const data = new FormData(event.currentTarget);
     const username = data.get('username');
     const password = data.get('password');
-
+    
     if(username == ''){
       setOpenNotify(true);
       setSeverity('warning');
@@ -47,17 +43,29 @@ export default function SignIn() {
       axios.post(`http://localhost:5000/user/signin/${ username }/${ password }`
 		  )
 		  .then(res => {
-
+        
         if(res.data.success === 'super'){ // in case of user is super admin
+          
+          localStorage.setItem('token', res.data.token)
           Router.push('/admin');
         }else{
-          if(res.data.success == 'player') { // in case of user is player
+          if(res.data.success === 'player') { // in case of user is player
+            
+            localStorage.setItem('token', res.data.token)
             Router.push('/connectwallet')
           }
-          else { // in case of user is admin
+          else if(res.data.success === 'admin') { // in case of user is admin
             console.log(res.data)
             localStorage.setItem('token', res.data.token)
             Router.push('/denomination')
+          } else if(res.data.success === 'started') {
+            setOpenNotify(true);
+            setSeverity('warning');
+            setMessage('The game has already started.');
+          } else {
+            setOpenNotify(true);
+            setSeverity('warning');
+            setMessage('Invalid user');
           }
         }
 		  })
@@ -149,7 +157,7 @@ export default function SignIn() {
               fullWidth
               name="password"
               label="Password"
-              type="password"
+
               id="password"
               autoComplete="current-password"
             />

@@ -30,6 +30,7 @@ import Grid from '@mui/material/Grid';
 import axios from 'axios';
 import Notification from '../components/notification';
 import Navbar from '../components/navbar';
+import Router from 'next/router'
 
 const theme = createTheme();
 
@@ -126,7 +127,9 @@ export default function Admin() {
     const [email, setEmail] = React.useState('');
     const [referredby, setReferredby] = React.useState('');
     const [rows, setRows] = React.useState([]);
-    
+
+    const [username, setUsername] = React.useState('');
+
     const [id, setId] = React.useState(0);
 
     const SetAdminInfo = (_id, metausername, gameusername, password, email, referredby) => {
@@ -141,7 +144,7 @@ export default function Admin() {
     //const { data: session, status } = useSession();
     
 
-    // Once render when fetch from database
+    //Once render when fetch from database
     React.useEffect(async () => {
         axios.get('http://localhost:5000/user'
         ).then(res => {
@@ -199,6 +202,8 @@ export default function Admin() {
         }
         return true;
     }
+
+    // handle the user 
 
     const UpdateAdminInfo = () => {
         if(IsValid()){
@@ -299,6 +304,41 @@ export default function Admin() {
       }
       setOpenNotify(false);
     };
+
+    // validate if the user login
+  
+  React.useEffect(async () => {
+    if(username === '')
+    {
+        let isLoggin = await GetUserInfo();
+        if(!isLoggin)
+          Router.push('signin');
+    }
+          
+  }, [username]);
+
+  const GetUserInfo = async () => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      try {
+        const res = await axios.get('http://localhost:5000/user/valid', {
+          headers: {
+            "x-access-token": token
+          }
+        });
+        
+        setUsername(res.data.user.username);
+        return res.data.isLoggedIn;
+      } catch (err) {
+        console.error(err);
+      }
+    } else {
+      delete axios.defaults.headers.common['x-access-token'];
+      return false;
+    }
+  }
+
+
 
     return (
         <ThemeProvider theme={theme}>
