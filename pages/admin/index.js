@@ -146,11 +146,14 @@ export default function Admin() {
 
     //Once render when fetch from database
     React.useEffect(async () => {
-        axios.get('http://localhost:5000/user'
-        ).then(res => {
-            setRows(res.data.sort((a, b) => (a.calories < b.calories ? -1 : 1)))
-            //console.log(res.data)
-        })
+        const Valid = async () => {
+            axios.get('http://localhost:5000/user'
+            ).then(res => {
+                setRows(res.data.sort((a, b) => (a.calories < b.calories ? -1 : 1)))
+                //console.log(res.data)
+            }); 
+        }
+        Valid();
 
     }, [])
 

@@ -71,8 +71,8 @@ export default function SignIn() {
           <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 1 }}>
             <Grid container spacing={2}>
               {
-                information.map(info => (
-                  <Grid key={info.url} item xs={12}>
+                information.map((info, index) => (
+                  <Grid key={index} item xs={12}>
                     <Link href={info.url}>
                       <Button
                           type="submit"

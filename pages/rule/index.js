@@ -26,8 +26,8 @@ export default function Rule() {
         <>
             <List >
                 {
-                    rules.map(rule => (
-                        <ListItem key={rule}>
+                    rules.map((rule, index) => (
+                        <ListItem key={index}>
                             <ListItemButton>
                                 <StarIcon />
                                 <ListItemText primary={rule} />

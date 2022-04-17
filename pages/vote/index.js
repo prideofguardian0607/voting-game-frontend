@@ -51,7 +51,7 @@ export default function Vote() {
         Router.push('signin');
     }
     
-  }, []);
+  }, [username]);
 
   const GetUserInfo = async () => {
     const token = localStorage.getItem('token');
@@ -448,9 +448,9 @@ export default function Vote() {
                 } 
                 
                 seat = (
-                  <Card onClick={() => {
+                  <Card key={index} onClick={() => {
                     Vote(index)
-                  }} key={index} sx={{ width: '10%', height: '10%', backgroundColor:  color, position: 'absolute', top: pos.y, left: pos.x }}>             
+                  }} sx={{ width: '10%', height: '10%', backgroundColor:  color, position: 'absolute', top: pos.y, left: pos.x }}>             
                     <Box
                       sx={{
                         width: '50%',
@@ -528,8 +528,8 @@ export default function Vote() {
         <DialogTitle>Winning Order</DialogTitle>
         <DialogContent sx={{alignItems: 'center', textAlign: 'center'}}>
             {
-              winningOrder.map(order => (
-                <Typography>
+              winningOrder.map((order, index) => (
+                <Typography key={index}>
                   {order.order + 1} : {order.username}
                 </Typography>
               ))
