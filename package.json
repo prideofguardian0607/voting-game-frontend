@@ -1,5 +1,6 @@
 {
   "private": true,
+  
   "scripts": {
     "dev": "next -p 8080",
     "build": "next build",
@@ -7,7 +8,6 @@
     "export": "next export"
   },
   "proxy": "http://localhost:8000",
-  "homepage": ".",
   "dependencies": {
     "@3rdweb/hooks": "^1.9.2",
     "@emotion/react": "^11.9.0",
