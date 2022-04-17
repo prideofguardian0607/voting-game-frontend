@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Typography from '@mui/material/Typography'
-import React from 'react';
+import React, { useRef } from 'react';
 import Router from 'next/router';
 import axios from 'axios';
 import Navbar from '../components/navbar';
@@ -9,8 +9,12 @@ import CardActions from '@mui/material/CardActions';
 import CardContent from '@mui/material/CardContent';
 import Button from '@mui/material/Button';
 import Box from '@mui/material/Box'
-import Notification from '../components/notification'
-
+import Notification from '../components/notification';
+import Container from '@mui/material/Container';
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogTitle from '@mui/material/DialogTitle';
 
 export default function Vote() {
 
@@ -24,10 +28,19 @@ export default function Vote() {
   const [ startButtonDisabled, setStartButtonDisabled] = React.useState(true);
   const [ startButtonHidden, setStartButtonHidden] = React.useState('block');
 
-  const [ level, setLevel ] = React.useState('player');
+  const level = useRef('player');
   const [isGameStarted, setIsGameStarted] = React.useState(false);
 
-  const [ previousVotedIndex, setPreviousVotedIndex ] = React.useState(-1);
+  const [winningOrder, SetWinningOrder] = React.useState([]);
+
+  const previousVotedIndex = useRef(-1);
+
+  const TIMEOUT_LIMIT = 600;
+  const TIMEOUT_LIMIT_GAME = 3;
+  const PLAYER_LIMIT = 2;
+
+  const timer = useRef(null);
+  const gametimeHandler = useRef(null);
   
 
   React.useEffect(async () => {
@@ -36,7 +49,6 @@ export default function Vote() {
       let info = await GetUserInfo();
       if(!info.isLoggedIn)
         Router.push('signin');
-      
     }
     
   }, []);
@@ -46,7 +58,6 @@ export default function Vote() {
     let username_temp = '';
     let temp_isLogin = false;
     let temp_code = '';
-    let temp_level = 'player';
     
     if (token) {
       try {
@@ -59,9 +70,8 @@ export default function Vote() {
         setUsername(res.data.user.username);
         username_temp = res.data.user.username;
         temp_isLogin = res.data.isLoggedIn;
-        setLevel(res.data.user.level);
-        temp_level = res.data.user.level;
-        console.log(level)
+        level.current = res.data.user.level;
+        
         
 
         if(res.data.user.code) // in case of user
@@ -77,11 +87,10 @@ export default function Vote() {
           if(temp_code.length < 5)
             temp_code += "00";
           setCode(temp_code);
-          
         }
 
         // get the players information 
-        setInterval(() => {
+        gametimeHandler.current = setInterval(() => {
           axios.get(`http://localhost:5000/game/getplayers/${temp_code.substring(0, 4)}`).then(res => {
             
             let players = res.data.players;
@@ -91,8 +100,6 @@ export default function Vote() {
               setIsGameStarted(true);
               setPriceHidden('block');
             }
-            
-
             // set disable start button
             let sum = 0;
             players.map(player => {
@@ -102,8 +109,8 @@ export default function Vote() {
               }
             })
 
-            if(sum > 5) {
-              if(temp_level == 'admin')
+            if(sum > PLAYER_LIMIT) {
+              if(level.current == 'admin')
               { 
                 setStartButtonDisabled(false);
               }  
@@ -129,10 +136,35 @@ export default function Vote() {
                 players.splice(index, 0, null);
             });
 
-            setGameInfo(players)
+            setGameInfo(players);
 
+            let isAdminVoted = players[0].voted[0] != '' && players[0].voted[0] != '' && players[0].voted[0] != ''; // is admin voted out?
+            let order_temp = !isAdminVoted ? 1 : 0;            
+            // if the game is finished?
+            let isGameEnd = players.filter(player => {
+              if(player)
+                return player.order == order_temp;
+              return false;
+            }).length == 1;
+
+            if(order_temp == 1)
+              players[0].order = 0;
+
+            if(isGameEnd) // If the game end
+            {
+              clearTimeout(gametimeHandler.current);
+              clearTimeout(timer.current);
+
+              SetWinningOrder(players.sort((a, b) => {
+                if(a != null && b != null)
+                return a.order - b.order;
+              }).filter(order => {
+                return order != null;
+              }));
+              setOpenDialog(true);
+            }
           });
-        }, 1000);
+        }, 100);
 
         return { isLoggedIn: temp_isLogin, code: temp_code };
 
@@ -146,13 +178,21 @@ export default function Vote() {
   }
 
   const Counter = () => {
-
+    let time = 0;
+    timer.current = setInterval(() => {
+      time ++;
+      if(time > TIMEOUT_LIMIT_GAME)
+      {
+        clearTimeout(timer.current);
+        alert('Time out');
+      }  
+    }, 1000);
   };
 
   //start game
 
   const StartGame = async () => {
-    if(level == 'admin')
+    if(level.current == 'admin')
     {
       // set the start game flag
       axios.post(`http://localhost:5000/game/start/${code.substring(0, 4)}/${username}`).then(res => {
@@ -161,7 +201,7 @@ export default function Vote() {
           // show the winning pools
           setPriceHidden('block');
           setIsGameStarted(true);
-          
+          Counter();
         }
       });
     }
@@ -173,38 +213,106 @@ export default function Vote() {
     
     if(isGameStarted) { // if the game starts
       let players = gameinfo;
-      // validate if you have right to vote
+      // get your information
       let you = players.filter(player => {
         if(player)
-          return player.code == code && ( player.voted[0] == '' || player.voted[1] == '' || player.voted[2] == '');
+          return player.code == code;
         return false;
-      });
+      })[0];
 
-      if(you.length == 0) { // if you have no right to vote
-        setMessage("You have no right to vote.");
-        setSeverity('warning');
-        setOpenNotify(true);
-      } else { // if you have right to vote
+      let isYouVoted = !(you.voted[0] == '' || you.voted[1] == '' || you.voted[2] == ''); // are you voted out?
+
+      let isAdminVoted = players[0].voted[0] != '' && players[0].voted[0] != '' && players[0].voted[0] != ''; // is admin voted out?
+
+      if(!isYouVoted || level.current == 'admin' || (!isAdminVoted && you.order <= 2) || (isAdminVoted && you.order <= 2) ) { // if you have right to vote
         if(players[index].voted[0] != '' && players[index].voted[1] != '' && players[index].voted[2] != '') { // if the player has been kicked from the game
           setMessage("This player has been kicked from the game.");
           setSeverity('warning');
           setOpenNotify(true);                     
         } else {
-          if(level == 'admin') // if the user is admin
+          if(level.current == 'admin') // if the user is admin
           {
-            if(previousVotedIndex == -1) { // in case of the admin's first vote
-              setPreviousVotedIndex(index);
-    
+            clearTimeout(timer);  
+            if(previousVotedIndex.current == -1) { // in case of the admin's first vote
+              previousVotedIndex.current = index;
+              
               players[index].voted[0] = username; // admin votes the player
+
+              // count the timeout until 10 mins
+              let time = 0, time1 = 0;
+              let timeHandler = setInterval(() => {
+                if(players[index].voted[1] == '' && players[index].voted[2] == '') {
+                  if(!isAdminVoted && you.order <= 2) { // at last scenario
+                    time1 ++;
+                    if(time >= TIMEOUT_LIMIT)
+                    {
+                      clearInterval(timeHandler);
+                      alert('Game Over');
+                    }
+                  }
+                  time ++;
+                  console.log(time)
+                  if(time >= TIMEOUT_LIMIT)
+                  {
+                    clearInterval(timeHandler);
+                    players[index].voted[0] = '';
+                    axios.post(`http://localhost:5000/game/vote/${ JSON.stringify({ code: code.substring(0, 4), players: players.filter(player => {
+                        return player != null; 
+                      })}) }`).then(res => {
+                      if(res.data.success) {
+                        setGameInfo(players);
+                      }
+                    }); 
+                  } 
+                }
+                
+                
+              }, 1000);
             } else { 
-              if(!players[previousVotedIndex].voted[1] && !players[previousVotedIndex].voted[2]) { // if the player is not voted by other players
-                players[previousVotedIndex].voted[0] = '';
+              if(players[previousVotedIndex.current].voted[1] == '' && players[previousVotedIndex.current].voted[2] == '' ) { // if the player is not voted by other players
+                players[previousVotedIndex.current].voted[0] = '';
                 players[index].voted[0] = username; // admin votes the player
-                setPreviousVotedIndex(index);
+                previousVotedIndex.current = index;
+                // count the timeout until 10 mins
+              let time = 0, time1 = 0;
+              let timeHandler = setInterval(() => {
+                if(players[index].voted[1] == '' && players[index].voted[2] == '') {
+                  if(!isAdminVoted && you.order <= 2) { // at last scenario
+                    time1 ++;
+                    if(time >= TIMEOUT_LIMIT)
+                    {
+                      clearInterval(timeHandler);
+                      alert('Game Over');
+                    }
+                  }
+                  time ++;
+                  console.log(time)
+                  if(time >= TIMEOUT_LIMIT)
+                  {
+                    clearInterval(timeHandler);
+                    players[index].voted[0] = '';
+                    axios.post(`http://localhost:5000/game/vote/${ JSON.stringify({ code: code.substring(0, 4), players: players.filter(player => {
+                        return player != null; 
+                      })}) }`).then(res => {
+                      if(res.data.success) {
+                        setGameInfo(players);
+                      }
+                    }); 
+                  } 
+                }
+                
+                
+              }, 1000);
+
               } else { // if the player has already been voted by other players
-                setMessage("You can't change the vote.");
-                setSeverity('warning');
-                setOpenNotify(true);
+                if(players[previousVotedIndex.current].voted[1] != '' && players[previousVotedIndex.current].voted[2] != '') { // if the player has been voted by two other players so admin can vote other player  
+                  players[index].voted[0] = username; // admin votes the player
+                  previousVotedIndex.current = index;
+                } else {
+                  setMessage("You can't vote this player.");
+                  setSeverity('warning');
+                  setOpenNotify(true);  
+                }
               }
             }
           } else { // if the user is player
@@ -215,9 +323,41 @@ export default function Vote() {
                 setOpenNotify(true);
               } else {
                 if(players[index].voted[1] != '') { // if the first vote is done.
+                  
                   players[index].voted[2] = username; 
-                } else {
+                  // make decision of order of player
+                  let totalPlayerCount = players.filter(player => {
+                    if(player)
+                      return true;
+                    return false;
+                  }).length;
+                  let votedCount = players.filter(player => {
+                    if(player) 
+                      return player.voted[0] != '' && player.voted[0] != '' && player.voted[0] != '';
+                  }).length;
+                  players[index].order = totalPlayerCount - votedCount;
+                } else { 
                   players[index].voted[1] = username; 
+                  // count the timeout until 10 mins
+                  let time = 0;
+                  let timeHandler = setInterval(() => {
+                    if(players[index].voted[2] == '') {
+                      time ++;
+                      console.log(time)
+                      if(time >= TIMEOUT_LIMIT)
+                      {
+                        clearInterval(timeHandler);
+                        players[index].voted[0] = '';
+                        axios.post(`http://localhost:5000/game/vote/${ JSON.stringify({ code: code.substring(0, 4), players: players.filter(player => {
+                            return player != null 
+                          })}) }`).then(res => {
+                          if(res.data.success) {
+                            setGameInfo(players);
+                          }
+                        }); 
+                      } 
+                    }
+                  }, 1000);
                 }
               }
             } else { // in case that the player is not voted by admin
@@ -235,7 +375,12 @@ export default function Vote() {
           if(res.data.success) {
             setGameInfo(players);
           }
-        });
+        });        
+        
+      } else { // if you have no right to vote
+        setMessage("You have no right to vote.");
+        setSeverity('warning');
+        setOpenNotify(true);        
       }  
     } else { // if the game has not started yet.
       setMessage("The game has not started yet.");
@@ -247,14 +392,14 @@ export default function Vote() {
   // positions of seat
 
   const positions = [
-    {y: '30%', x: '79%'},
-    {y: '15%', x: '58%'},
-    {y: '15%', x: '37%'},
-    {y: '30%', x: '16%'},
-    {y: '65%', x: '16%'},
-    {y: '80%', x: '37%'},
-    {y: '80%', x: '58%'},
-    {y: '65%', x: '79%'},
+    {y: '82.5%', x: '27.5%'},
+    {y: '60%', x: '5%'},
+    {y: '30%', x: '5%'},
+    {y: '7.5%', x: '27.5%'},
+    {y: '7.5%', x: '62.5%'},
+    {y: '30%', x: '85%'},
+    {y: '60%', x: '85%'},
+    {y: '82.5%', x: '62.5%'},
   ];
 
   //Notification handle
@@ -271,94 +416,130 @@ export default function Vote() {
     setOpenNotify(false);
   };
 
+  // Alert handle
+
+  const [openDialog, setOpenDialog] = React.useState(false);
+  const handleDialogClose = () => {
+      setOpenDialog(false);
+  };
+
   return (
-      <>
-        <Navbar title="Vote" username={`${username}(${code})`}  />
-        {
-          positions.map((pos, index) => {
-            let seat;
-            let temp_code = '';
-            let temp_username = '';
-            let color = 'gray';
-            let hidden = true;
+    <>
+      <Navbar title="Vote" username={`${username}(${code})`}  />
+      <Container>
+        <Box sx={{ bgcolor: 'green', position: 'absolute', top: '15%', left: '15%', height: '75%', width: '70%', borderRadius: 30 }} >
+          {
+            positions.map((pos, index) => {
+              let seat;
+              let temp_code = code.substring(0, 4) + '(0' + index + ')';
+              let temp_username = 'Empty';
+              let color = 'gray';
+              let hidden = true;
 
-            if(gameinfo[index] != null)
-            {
-              temp_code = gameinfo[index].code;
-              temp_code = `${temp_code.slice(0, 4)}(${temp_code.slice(4, 6)})`
-              temp_username = gameinfo[index].username;
-              if(gameinfo[index].isPay && !(gameinfo[index].voted[0] != '' && gameinfo[index].voted[1] != '' && gameinfo[index].voted[2] != ''))
+              if(gameinfo[index] != null)
               {
-                color = 'green';
-                hidden = false;
-              } 
-              
-              seat = (
-                <Card onClick={() => {
-                  Vote(index)
-                }} key={index} sx={{ width: '8%', height: '8%', backgroundColor:  color, position: 'absolute', top: pos.x, left: pos.y }}>             
-                  <Box
-                    sx={{
-                      width: '50%',
-                      height: '100%',
-                      position: 'absolute',
-                      backgroundColor: 'error.dark',
-                      display: gameinfo[index].voted[0] != '' && !hidden ? 'block' : 'none'
-                    }}
-                  />
-                  <Box
-                    sx={{
-                      width: '50%',
-                      height: '50%',
-                      position: 'absolute',
-                      left: '50%',
-                      backgroundColor: 'error.dark',
-                      display: gameinfo[index].voted[1] != ''  && !hidden ? 'block' : 'none'
-                    }}
-                  />
-                  <Box
-                    sx={{
-                      width: '50%',
-                      height: '50%',
-                      position: 'absolute',
-                      left: '50%',
-                      top: '50%',
-                      backgroundColor: 'error.dark',
-                      display: gameinfo[index].voted[2] != ''  && !hidden ? 'block' : 'none'
-                    }}
-                  />
-                  <Typography variant="div" sx={{position: 'absolute', top: '20%', left: '15%'}} >
-                    { temp_username }
-                  </Typography>
-                  <br></br>
-                  <Typography sx={{position: 'absolute', top: '50%', left: '15%'}}>
-                  { temp_code }
-                  </Typography>
-                </Card>
+                temp_code = gameinfo[index].code;
+                temp_code = `${temp_code.slice(0, 4)}(${temp_code.slice(4, 6)})`
+                temp_username = gameinfo[index].username;
+                if(gameinfo[index].isPay && !(gameinfo[index].voted[0] != '' && gameinfo[index].voted[1] != '' && gameinfo[index].voted[2] != ''))
+                {
+                  color = 'limegreen';
+                  hidden = false;
+                } 
+                
+                seat = (
+                  <Card onClick={() => {
+                    Vote(index)
+                  }} key={index} sx={{ width: '10%', height: '10%', backgroundColor:  color, position: 'absolute', top: pos.y, left: pos.x }}>             
+                    <Box
+                      sx={{
+                        width: '50%',
+                        height: '100%',
+                        position: 'absolute',
+                        backgroundColor: 'error.dark',
+                        display: gameinfo[index].voted[0] != '' && !hidden ? 'block' : 'none'
+                      }}
+                    />
+                    <Box
+                      sx={{
+                        width: '50%',
+                        height: '50%',
+                        position: 'absolute',
+                        left: '50%',
+                        backgroundColor: 'error.dark',
+                        display: gameinfo[index].voted[1] != ''  && !hidden ? 'block' : 'none'
+                      }}
+                    />
+                    <Box
+                      sx={{
+                        width: '50%',
+                        height: '50%',
+                        position: 'absolute',
+                        left: '50%',
+                        top: '50%',
+                        backgroundColor: 'error.dark',
+                        display: gameinfo[index].voted[2] != ''  && !hidden ? 'block' : 'none'
+                      }}
+                    />
+                    <Typography variant="h6" sx={{position: 'absolute',top: '0%', width: '100%', height: '35%', textAlign: 'center'}} >
+                      { temp_username }
+                    </Typography>
+                    <Typography variant='h6' sx={{position: 'absolute',top: '50%', width: '100%', height: '35%', textAlign: 'center'}}>
+                    { temp_code }
+                    </Typography>
+                  </Card>
+                  )
+              } else {
+                seat = (
+                  <Card onClick={() => {
+                    setMessage("This seat is empty");
+                    setOpenNotify(true);
+                    setSeverity('warning');
+                  }} key={index} sx={{ width: '10%', height: '10%', backgroundColor:  color, position: 'absolute', top: pos.y, left: pos.x }}>             
+                    <Typography variant="h6" sx={{position: 'absolute', left: '25%',top: '15%', width: '50%', height: '20%', textAlign: 'center'}} >
+                      { temp_username }
+                    </Typography>
+                  </Card>
                 )
+              }
+
+              return seat;
+            })
+
+          }
+          <Card sx={{ width: '60%', height: '50%', borderRadius: 15, position: 'absolute', top: '25%', left: '20%', borderColor: 'red', borderWidth: '5px' }} >
+            <Typography sx={{ display: priceHidden, position: 'absolute', left: '25%',top: '15%', width: '50%', height: '20%', textAlign: 'center'}} variant='h3'>
+              1st: {(totalPrice * 0.5).toFixed(2)}
+            </Typography>
+            <Typography sx={{ display: priceHidden, position: 'absolute', left: '25%',top: '40%', width: '50%', height: '20%', textAlign: 'center'}} variant='h3'>
+              2nd:{(totalPrice * 0.3).toFixed(2)}
+            </Typography>
+            <Typography sx={{ display: priceHidden, position: 'absolute', left: '25%',top: '65%', width: '50%', height: '20%', textAlign: 'center'}} variant='h3'>
+              3rd:{(totalPrice * 0.2).toFixed(2)}
+            </Typography>
+          </Card>
+          <Button onClick={StartGame} variant='contained' disabled={startButtonDisabled} size="large" color='success'  sx={{ display: startButtonHidden, width: '15%', height: '10%',position: 'absolute', bottom: '10%', left: '42.5%',top: '82.5%', alignItems: 'center', justify: 'center' }}>
+              Start Game
+          </Button>        
+        </Box>
+      </Container>
+      <Notification open={openNotify} message={message} severity={severity} handleClose={notifyHandleClose} />
+      <Dialog open={openDialog} onClose={handleDialogClose}>
+        <DialogTitle>Winning Order</DialogTitle>
+        <DialogContent sx={{alignItems: 'center', textAlign: 'center'}}>
+            {
+              winningOrder.map(order => (
+                <Typography>
+                  {order.order + 1} : {order.username}
+                </Typography>
+              ))
             }
-
-            return seat;
-          })
-
-        }
-        <Card sx={{ minWidth: '50%', minHeight: '40%', borderRadius: '50%', position: 'absolute', top: '30%', left: '25%' }}>
-          <Typography sx={{ display: priceHidden, position: 'absolute', left: '45%',top: '25%'}} variant='h4'>
-            1st: {totalPrice * 0.5}
-          </Typography>
-          <Typography sx={{ display: priceHidden, position: 'absolute', top: '45%', left: '45%'}} variant='h4'>
-            2nd:{totalPrice * 0.3}
-          </Typography>
-          <Typography sx={{ display: priceHidden, position: 'absolute', top: '65%', left: '45%'}} variant='h4'>
-            3rd:{totalPrice * 0.2}
-          </Typography>
-        </Card>
-        <Button onClick={StartGame} variant='contained' disabled={startButtonDisabled} size="large" color='success'  sx={{ display: startButtonHidden, minWidth: '10%', minHeight: '10%',position: 'absolute', bottom: '10%', left: '45%', alignItems: 'center', justify: 'center' }}>
-            Start Game
-        </Button>        
-        
-        <Notification open={openNotify} message={message} severity={severity} handleClose={notifyHandleClose} />
-      </>
+        </DialogContent>
+        <DialogActions>
+            <Button onClick={handleDialogClose}>OK</Button>
+        </DialogActions>
+    </Dialog>      
+    </>
   )
 }
 

@@ -1,18 +1,11 @@
 import * as React from 'react';
 
-import { ThirdwebProvider } from "@3rdweb/hooks";
-
-import "regenerator-runtime/runtime";
-import { useWeb3 } from "@3rdweb/hooks"
-
-import Avatar from '@mui/material/Avatar';
 import Button from '@mui/material/Button';
 import CssBaseline from '@mui/material/CssBaseline';
 import TextField from '@mui/material/TextField';
 import Link from 'next/link';
 import Grid from '@mui/material/Grid';
 import Box from '@mui/material/Box';
-import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import Typography from '@mui/material/Typography';
 import Container from '@mui/material/Container';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
@@ -20,10 +13,14 @@ import Router from 'next/router';
 import axios from 'axios';
 import Navbar from '../components/navbar';
 
+import { useMoralis } from 'react-moralis';
+
 
 const theme = createTheme();
 
 export default function ConnectWallet() {
+
+  const { authenticate, authError } = useMoralis();
 
   const [ username, setUsername] = React.useState('');
 
@@ -39,6 +36,7 @@ export default function ConnectWallet() {
   };
 
   const Connect = () => {
+    authenticate();
   }
   
   React.useEffect(async () => {
@@ -88,7 +86,15 @@ export default function ConnectWallet() {
       delete axios.defaults.headers.common['x-access-token'];
       return false;
     }
-  }
+  };
+
+  let error;
+  if(authError)
+    error = (
+      <Typography>
+        {authError.message}
+      </Typography>
+    );
 
 
   return (
@@ -108,7 +114,7 @@ export default function ConnectWallet() {
           <Typography component="h1" variant="h5">
             Connect wallet
           </Typography>
-          
+          { error }
           <Box component="form" noValidate sx={{ mt: 1 }}>
             <Button
               fullWidth
