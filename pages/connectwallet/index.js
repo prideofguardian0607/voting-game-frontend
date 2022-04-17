@@ -28,7 +28,7 @@ export default function ConnectWallet() {
   // const { connectWallet, address, error } = useWeb3();
 
   const PayAndStartGame = () => {
-    axios.post(`${process.env.API_URL}game/pay/${code}`).then(res => {
+    axios.post(`${process.env.API_URL}/game/pay/${code}`).then(res => {
       if(res.data.success)
         Router.push('vote');
     })
@@ -55,7 +55,7 @@ export default function ConnectWallet() {
     let username_temp = '';
     if (token) {
       try {
-        let res = await axios.get('${process.env.API_URL}user/valid', {
+        let res = await axios.get('${process.env.API_URL}/user/valid', {
           headers: {
             "x-access-token": token
           }
@@ -71,7 +71,7 @@ export default function ConnectWallet() {
           
         else // in case of admin
         {
-          res = await axios.get(`${process.env.API_URL}game/getcode/${username_temp}`);
+          res = await axios.get(`${process.env.API_URL}/game/getcode/${username_temp}`);
           console.log(res)
           let temp_code = res.data.code;
           if(temp_code.length < 5)

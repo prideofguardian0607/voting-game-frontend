@@ -56,7 +56,7 @@ export default function Denomination() {
     
     let data = { username: username, code: GenerateCode(), amount: amount};
 
-    axios.post(`${process.env.API_URL}game/create/${JSON.stringify(data)}`, ).then((res) => {
+    axios.post(`${process.env.API_URL}/game/create/${JSON.stringify(data)}`, ).then((res) => {
       if(res.data.success == true) {
         Router.push('connectwallet');
       }
@@ -91,7 +91,7 @@ export default function Denomination() {
     const token = localStorage.getItem('token');
     if (token) {
       try {
-        const res = await axios.get('${process.env.API_URL}user/valid', {
+        const res = await axios.get('${process.env.API_URL}/user/valid', {
           headers: {
             "x-access-token": token
           }

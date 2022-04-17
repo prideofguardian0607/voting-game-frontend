@@ -147,7 +147,7 @@ export default function Admin() {
     //Once render when fetch from database
     React.useEffect(async () => {
         const Valid = async () => {
-            axios.get(`${process.env.API_URL}user`
+            axios.get(`${process.env.API_URL}/user`
             ).then(res => {
                 setRows(res.data.sort((a, b) => (a.calories < b.calories ? -1 : 1)))
                 //console.log(res.data)
@@ -210,7 +210,7 @@ export default function Admin() {
 
     const UpdateAdminInfo = () => {
         if(IsValid()){
-            axios.put(`${process.env.API_URL}user/${id}/${ metausername }/${ gameusername }/${ password }/${ email }/${ referredby }`
+            axios.put(`${process.env.API_URL}/user/${id}/${ metausername }/${ gameusername }/${ password }/${ email }/${ referredby }`
             ).then(res => {
                 if(res.data.success)
                 {
@@ -241,7 +241,7 @@ export default function Admin() {
 
     const CreateAdminInfo = () => {
     if(IsValid()){
-        axios.post(`${process.env.API_URL}user/${ metausername }/${ gameusername }/${ password }/${ email }/${ referredby }`
+        axios.post(`${process.env.API_URL}/user/${ metausername }/${ gameusername }/${ password }/${ email }/${ referredby }`
         ).then(res => {
             
             if(res.data.success)
@@ -263,7 +263,7 @@ export default function Admin() {
 
     const DeleteAdminInfo = () => {
         
-        axios.delete(`${process.env.API_URL}user/${id}`).
+        axios.delete(`${process.env.API_URL}/user/${id}`).
         then((res) => {
             let index = rows.findIndex((row) => {
                 return row._id == id;
@@ -324,7 +324,7 @@ export default function Admin() {
     const token = localStorage.getItem('token');
     if (token) {
       try {
-        const res = await axios.get('${process.env.API_URL}user/valid', {
+        const res = await axios.get('${process.env.API_URL}/user/valid', {
           headers: {
             "x-access-token": token
           }
