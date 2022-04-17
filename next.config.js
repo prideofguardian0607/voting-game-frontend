@@ -3,5 +3,5 @@ module.exports = {
     env: {
         API_URL: dev ? 'http://localhost:5000' : 'http://localhost:5000'
     },
-    exportTrailingSlash: true,
+    trailingSlash: true,
 };
