@@ -55,7 +55,7 @@ export default function ConnectWallet() {
     let username_temp = '';
     if (token) {
       try {
-        let res = await axios.get('${process.env.API_URL}/user/valid', {
+        let res = await axios.get(`${process.env.API_URL}/user/valid`, {
           headers: {
             "x-access-token": token
           }

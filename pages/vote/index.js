@@ -61,7 +61,7 @@ export default function Vote() {
     
     if (token) {
       try {
-        let res = await axios.get('${process.env.API_URL}/user/valid', {
+        let res = await axios.get(`${process.env.API_URL}/user/valid`, {
           headers: {
             "x-access-token": token
           }

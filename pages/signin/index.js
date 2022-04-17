@@ -92,7 +92,7 @@ export default function SignIn() {
     const token = localStorage.getItem('token');
     if (token) {
       try {
-        const res = await axios.get('${process.env.API_URL}/user/valid', {
+        const res = await axios.get(`${process.env.API_URL}/user/valid`, {
           headers: {
             "x-access-token": token
           }
