@@ -7,7 +7,7 @@
     "export": "next export",
     "lint": "next lint"
   },
-  "proxy": "http://localhost:8000",
+  "proxy": "https://localhost:8080",
   "dependencies": {
     "@3rdweb/hooks": "^1.9.2",
     "@emotion/react": "^11.9.0",

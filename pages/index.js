@@ -51,6 +51,7 @@ export default function SignIn() {
     //location.href = 'signin';
     Router.push('connectwallet')
   };
+  console.log(process.env.API_URL)
 
   return (
     <ThemeProvider theme={theme}>

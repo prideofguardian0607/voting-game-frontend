@@ -40,7 +40,7 @@ export default function SignIn() {
       setSeverity('warning');
       setMessage('Password must be at least 6 digits');
     }else{
-      axios.post(`http://localhost:5000/user/signin/${ username }/${ password }`
+      axios.post(`${process.env.API_URL}user/signin/${ username }/${ password }`
 		  )
 		  .then(res => {
         
@@ -92,7 +92,7 @@ export default function SignIn() {
     const token = localStorage.getItem('token');
     if (token) {
       try {
-        const res = await axios.get('http://localhost:5000/user/valid', {
+        const res = await axios.get('${process.env.API_URL}user/valid', {
           headers: {
             "x-access-token": token
           }

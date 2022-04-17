@@ -36,7 +36,7 @@ import Router from 'next/router'
         setSeverity('warning')
         setOpen(true);
       } else {
-        axios.post(`http://localhost:5000/user/signup/${ metausername }/${ username }/${ password }/${ email }`)
+        axios.post(`${process.env.API_URL}user/signup/${ metausername }/${ username }/${ password }/${ email }`)
         .then(res => {
           if(res.data.success == true){
             setMessage('Email sent');

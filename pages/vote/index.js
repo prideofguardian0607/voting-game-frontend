@@ -61,7 +61,7 @@ export default function Vote() {
     
     if (token) {
       try {
-        let res = await axios.get('http://localhost:5000/user/valid', {
+        let res = await axios.get('${process.env.API_URL}user/valid', {
           headers: {
             "x-access-token": token
           }
@@ -82,7 +82,7 @@ export default function Vote() {
         } 
         else // in case of admin
         {
-          res = await axios.get(`http://localhost:5000/game/getcode/${username_temp}`);
+          res = await axios.get(`${process.env.API_URL}game/getcode/${username_temp}`);
           temp_code = res.data.code;
           if(temp_code.length < 5)
             temp_code += "00";
@@ -91,7 +91,7 @@ export default function Vote() {
 
         // get the players information 
         gametimeHandler.current = setInterval(() => {
-          axios.get(`http://localhost:5000/game/getplayers/${temp_code.substring(0, 4)}`).then(res => {
+          axios.get(`${process.env.API_URL}game/getplayers/${temp_code.substring(0, 4)}`).then(res => {
             
             let players = res.data.players;
             if(res.data.isStarted)
@@ -195,7 +195,7 @@ export default function Vote() {
     if(level.current == 'admin')
     {
       // set the start game flag
-      axios.post(`http://localhost:5000/game/start/${code.substring(0, 4)}/${username}`).then(res => {
+      axios.post(`${process.env.API_URL}game/start/${code.substring(0, 4)}/${username}`).then(res => {
         if(res.data.success) {
           
           // show the winning pools
@@ -256,7 +256,7 @@ export default function Vote() {
                   {
                     clearInterval(timeHandler);
                     players[index].voted[0] = '';
-                    axios.post(`http://localhost:5000/game/vote/${ JSON.stringify({ code: code.substring(0, 4), players: players.filter(player => {
+                    axios.post(`${process.env.API_URL}game/vote/${ JSON.stringify({ code: code.substring(0, 4), players: players.filter(player => {
                         return player != null; 
                       })}) }`).then(res => {
                       if(res.data.success) {
@@ -291,7 +291,7 @@ export default function Vote() {
                   {
                     clearInterval(timeHandler);
                     players[index].voted[0] = '';
-                    axios.post(`http://localhost:5000/game/vote/${ JSON.stringify({ code: code.substring(0, 4), players: players.filter(player => {
+                    axios.post(`${process.env.API_URL}game/vote/${ JSON.stringify({ code: code.substring(0, 4), players: players.filter(player => {
                         return player != null; 
                       })}) }`).then(res => {
                       if(res.data.success) {
@@ -348,7 +348,7 @@ export default function Vote() {
                       {
                         clearInterval(timeHandler);
                         players[index].voted[0] = '';
-                        axios.post(`http://localhost:5000/game/vote/${ JSON.stringify({ code: code.substring(0, 4), players: players.filter(player => {
+                        axios.post(`${process.env.API_URL}game/vote/${ JSON.stringify({ code: code.substring(0, 4), players: players.filter(player => {
                             return player != null 
                           })}) }`).then(res => {
                           if(res.data.success) {
@@ -369,7 +369,7 @@ export default function Vote() {
         }
   
         // update the game state 
-        axios.post(`http://localhost:5000/game/vote/${ JSON.stringify({ code: code.substring(0, 4), players: players.filter(player => {
+        axios.post(`${ process.env.API_URL }game/vote/${ JSON.stringify({ code: code.substring(0, 4), players: players.filter(player => {
             return player != null 
           })}) }`).then(res => {
           if(res.data.success) {
