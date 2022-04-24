@@ -33,6 +33,7 @@ export default function SignIn() {
         response = await axios.get('https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest?start=1&limit=5000&convert=USD', {
           headers: {
             'X_CMC_PRO_API_KEY': 'ab321ac9-d05e-4fbd-be49-d1dc83abf80d',
+            'Access-Control-Allow-Origin': '*'
           },
         });
         console.log(response)
