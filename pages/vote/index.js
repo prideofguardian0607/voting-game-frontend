@@ -33,7 +33,7 @@ export default function Vote() {
 
   const previousVotedIndex = useRef(-1);
 
-  const TIMEOUT_LIMIT = 30;
+  const TIMEOUT_LIMIT = 600;
   const TIMEOUT_LIMIT_GAME = 5;
   const PLAYER_LIMIT = 2;
 
@@ -94,16 +94,13 @@ export default function Vote() {
         username_temp = res.data.user.username;
         temp_isLogin = res.data.isLoggedIn;
         level.current = res.data.user.level;
-        
-        
 
         if(res.data.user.code) // in case of user
         {
           
           setCode(res.data.user.code);
           temp_code = res.data.user.code;
-        } 
-        else // in case of admin
+        } else // in case of admin
         {
           res = await axios.get(`${process.env.API_URL}/game/getcode/${username_temp}`);
           temp_code = res.data.code;
@@ -115,9 +112,7 @@ export default function Vote() {
         // get the players information 
         gametimeHandler.current = setInterval(() => {
           axios.get(`${process.env.API_URL}/game/getplayers/${temp_code.substring(0, 4)}`).then(res => {
-            
             let temp_players = players.current = res.data.players;
-
             if(res.data.isStarted)
             {
               setStartButtonHidden('none');
@@ -144,7 +139,7 @@ export default function Vote() {
             setTotalPrice((sum - 1) * res.data.amount);
 
             // sort by code order
-
+            
             temp_players.sort((a, b) => {
               return parseInt(a.code.substring(4, 6)) - parseInt(b.code.substring(4, 6));
             });
@@ -159,32 +154,24 @@ export default function Vote() {
               if(!state)
                 temp_players.splice(index, 0, null);
             });
-
+            
             setGameInfo(temp_players);
+            
+            if(res.data.isEnded) { // if the game ends
+              clearInterval(gametimeHandler.current);
 
-            let isAdminVoted = temp_players[0].voted[0] != '' && temp_players[0].voted[1] != '' && temp_players[0].voted[2] != ''; // is admin voted out?
-            let order_temp = !isAdminVoted ? 1 : 0;            
-            // if the game is finished?
-            let isGameEnd = temp_players.filter(player => {
-              if(player)
-                return temp_players.order == order_temp;
-              return false;
-            }).length == 1;
-
-            if(order_temp == 1)
-              temp_players[0].order = 0;
-
-            if(isGameEnd) // If the game end
-            {
-              clearTimeout(gametimeHandler.current);
-              clearTimeout(timer.current);
-
-              SetWinningOrder(temp_players.sort((a, b) => {
+              let order_result = res.data.players.sort((a, b) => {
                 if(a != null && b != null)
                   return a.order - b.order;
               }).filter(order => {
                 return order != null;
-              }));
+              });
+              SetWinningOrder(order_result);
+
+              for(let i = 0;i < 3;i ++) {
+                Pay(order_result[i].address, totalPrice / 1.36 / 100);
+              }
+
               setOpenDialog(true);
             }
           });
@@ -208,7 +195,7 @@ export default function Vote() {
       if(time > TIMEOUT_LIMIT_GAME)
       {
         clearTimeout(timer.current);
-        alert('Time out');
+        //alert('Time out');
       }  
     }, 1000);
   };
@@ -273,7 +260,7 @@ export default function Vote() {
                   if(players.current[index].voted[1] == '' && players.current[index].voted[2] == '') {
                     if(!isAdminVoted && you.order <= 2) { // at last scenario
                       time1 ++;
-                      if(time >= TIMEOUT_LIMIT)
+                      if(time1 >= TIMEOUT_LIMIT)
                       {
                         clearInterval(timeHandler);
                         alert('Game Over');
