@@ -39,6 +39,8 @@ export default function Vote() {
 
   const timer = useRef(null);
   const gametimeHandler = useRef(null);
+
+  const players = useRef(null);
   
   const Pay = async (to, amount) => {
     const web3 = createAlchemyWeb3("https://polygon-mumbai.g.alchemy.com/v2/VAaFI0iV-2W98yxBXPCtG9-OD1MCWIho");
@@ -114,8 +116,8 @@ export default function Vote() {
         gametimeHandler.current = setInterval(() => {
           axios.get(`${process.env.API_URL}/game/getplayers/${temp_code.substring(0, 4)}`).then(res => {
             
-            let players = res.data.players;
-            console.log(players)
+            let temp_players = players.current = res.data.players;
+
             if(res.data.isStarted)
             {
               setStartButtonHidden('none');
@@ -124,13 +126,12 @@ export default function Vote() {
             }
             // set disable start button
             let sum = 0;
-            players.map(player => {
+            temp_players.map(player => {
               if(player.isPay)
               {
                 sum ++;
               }
             })
-            console.log(sum)
             
             if(sum > PLAYER_LIMIT) {
               if(level.current == 'admin')
@@ -144,43 +145,43 @@ export default function Vote() {
 
             // sort by code order
 
-            players.sort((a, b) => {
+            temp_players.sort((a, b) => {
               return parseInt(a.code.substring(4, 6)) - parseInt(b.code.substring(4, 6));
             });
 
             // order handle
             let blank_state = [false, false, false, false, false, false, false, false];
-            players.map((player) => {
+            temp_players.map((player) => {
               blank_state[parseInt(player.code.substring(4, 6))] = true;
             });
 
             blank_state.map((state, index) => {
               if(!state)
-                players.splice(index, 0, null);
+                temp_players.splice(index, 0, null);
             });
 
-            setGameInfo(players);
+            setGameInfo(temp_players);
 
-            let isAdminVoted = players[0].voted[0] != '' && players[0].voted[0] != '' && players[0].voted[0] != ''; // is admin voted out?
+            let isAdminVoted = temp_players[0].voted[0] != '' && temp_players[0].voted[1] != '' && temp_players[0].voted[2] != ''; // is admin voted out?
             let order_temp = !isAdminVoted ? 1 : 0;            
             // if the game is finished?
-            let isGameEnd = players.filter(player => {
+            let isGameEnd = temp_players.filter(player => {
               if(player)
-                return player.order == order_temp;
+                return temp_players.order == order_temp;
               return false;
             }).length == 1;
 
             if(order_temp == 1)
-              players[0].order = 0;
+              temp_players[0].order = 0;
 
             if(isGameEnd) // If the game end
             {
               clearTimeout(gametimeHandler.current);
               clearTimeout(timer.current);
 
-              SetWinningOrder(players.sort((a, b) => {
+              SetWinningOrder(temp_players.sort((a, b) => {
                 if(a != null && b != null)
-                return a.order - b.order;
+                  return a.order - b.order;
               }).filter(order => {
                 return order != null;
               }));
@@ -235,9 +236,9 @@ export default function Vote() {
   const Vote = (index) => {
     
     if(isGameStarted) { // if the game starts
-      let players = gameinfo;
+      players.current = gameinfo;
       // get your information
-      let you = players.filter(player => {
+      let you = players.current.filter(player => {
         if(player)
           return player.code == code;
         return false;
@@ -245,91 +246,102 @@ export default function Vote() {
 
       let isYouVoted = !(you.voted[0] == '' || you.voted[1] == '' || you.voted[2] == ''); // are you voted out?
 
-      let isAdminVoted = players[0].voted[0] != '' && players[0].voted[0] != '' && players[0].voted[0] != ''; // is admin voted out?
+      let isAdminVoted = players.current[0].voted[0] != '' && players.current[0].voted[1] != '' && players.current[0].voted[2] != ''; // is admin voted out?
 
       if(!isYouVoted || level.current == 'admin' || (!isAdminVoted && you.order <= 2) || (isAdminVoted && you.order <= 2) ) { // if you have right to vote
-        if(players[index].voted[0] != '' && players[index].voted[1] != '' && players[index].voted[2] != '') { // if the player has been kicked from the game
+        if(players.current[index].voted[0] != '' && players.current[index].voted[1] != '' && players.current[index].voted[2] != '') { // if the player has been kicked from the game
           setMessage("This player has been kicked from the game.");
           setSeverity('warning');
           setOpenNotify(true);                     
         } else {
           if(level.current == 'admin') // if the user is admin
           {
-            clearTimeout(timer);  
+            //clearTimeout(timer);  
             if(previousVotedIndex.current == -1) { // in case of the admin's first vote
               previousVotedIndex.current = index;
               
-              players[index].voted[0] = username; // admin votes the player
+              players.current[index].voted[0] = username; // admin votes the player
 
               // count the timeout until 10 mins
               let time = 0, time1 = 0;
               let timeHandler = setInterval(() => {
-                if(players[index].voted[1] == '' && players[index].voted[2] == '') {
-                  if(!isAdminVoted && you.order <= 2) { // at last scenario
-                    time1 ++;
+                console.log(players.current)
+                if(players.current[index].voted[2] != '')
+                {
+                  clearInterval(timeHandler);
+                } else {
+                  if(players.current[index].voted[1] == '' && players.current[index].voted[2] == '') {
+                    if(!isAdminVoted && you.order <= 2) { // at last scenario
+                      time1 ++;
+                      if(time >= TIMEOUT_LIMIT)
+                      {
+                        clearInterval(timeHandler);
+                        alert('Game Over');
+                      }
+                    }
+                    time ++;
+                    
                     if(time >= TIMEOUT_LIMIT)
                     {
                       clearInterval(timeHandler);
-                      alert('Game Over');
-                    }
+                      players.current[index].voted[0] = '';
+                      axios.post(`${process.env.API_URL}/game/vote/${ JSON.stringify({ code: code.substring(0, 4), players: players.current.filter(player => {
+                          return player != null; 
+                        })}) }`).then(res => {
+                        if(res.data.success) {
+                          setGameInfo(players.current);
+                        }
+                      }); 
+                    } 
                   }
-                  time ++;
-                  console.log(time)
-                  if(time >= TIMEOUT_LIMIT)
-                  {
-                    clearInterval(timeHandler);
-                    players[index].voted[0] = '';
-                    axios.post(`${process.env.API_URL}/game/vote/${ JSON.stringify({ code: code.substring(0, 4), players: players.filter(player => {
-                        return player != null; 
-                      })}) }`).then(res => {
-                      if(res.data.success) {
-                        setGameInfo(players);
-                      }
-                    }); 
-                  } 
                 }
                 
                 
               }, 1000);
             } else { 
-              if(players[previousVotedIndex.current].voted[1] == '' && players[previousVotedIndex.current].voted[2] == '' ) { // if the player is not voted by other players
-                players[previousVotedIndex.current].voted[0] = '';
-                players[index].voted[0] = username; // admin votes the player
+              if(players.current[previousVotedIndex.current].voted[1] == '' && players.current[previousVotedIndex.current].voted[2] == '' ) { // if the player is not voted by other players
+                players.current[previousVotedIndex.current].voted[0] = '';
+                players.current[index].voted[0] = username; // admin votes the player
                 previousVotedIndex.current = index;
                 // count the timeout until 10 mins
               let time = 0, time1 = 0;
               let timeHandler = setInterval(() => {
-                if(players[index].voted[1] == '' && players[index].voted[2] == '') {
-                  if(!isAdminVoted && you.order <= 2) { // at last scenario
-                    time1 ++;
+                console.log(players.current)
+                if(players.current[index].voted[2] != '')
+                {
+                  clearInterval(timeHandler);
+                  
+                } else {
+                  if(players.current[index].voted[1] == '' && players.current[index].voted[2] == '') {
+                    if(!isAdminVoted && you.order <= 2) { // at last scenario
+                      time1 ++;
+                      if(time >= TIMEOUT_LIMIT)
+                      {
+                        clearInterval(timeHandler);
+                        alert('Game Over');
+                      }
+                    }
+                    time ++;
+                    //console.log(time)
                     if(time >= TIMEOUT_LIMIT)
                     {
                       clearInterval(timeHandler);
-                      alert('Game Over');
-                    }
+                      players.current[index].voted[0] = '';
+                      axios.post(`${process.env.API_URL}/game/vote/${ JSON.stringify({ code: code.substring(0, 4), players: players.current.filter(player => {
+                          return player != null; 
+                        })}) }`).then(res => {
+                        if(res.data.success) {
+                          setGameInfo(players.current);
+                        }
+                      }); 
+                    } 
                   }
-                  time ++;
-                  console.log(time)
-                  if(time >= TIMEOUT_LIMIT)
-                  {
-                    clearInterval(timeHandler);
-                    players[index].voted[0] = '';
-                    axios.post(`${process.env.API_URL}/game/vote/${ JSON.stringify({ code: code.substring(0, 4), players: players.filter(player => {
-                        return player != null; 
-                      })}) }`).then(res => {
-                      if(res.data.success) {
-                        setGameInfo(players);
-                      }
-                    }); 
-                  } 
                 }
-                
-                
               }, 1000);
 
               } else { // if the player has already been voted by other players
-                if(players[previousVotedIndex.current].voted[1] != '' && players[previousVotedIndex.current].voted[2] != '') { // if the player has been voted by two other players so admin can vote other player  
-                  players[index].voted[0] = username; // admin votes the player
+                if(players.current[previousVotedIndex.current].voted[1] != '' && players.current[previousVotedIndex.current].voted[2] != '') { // if the player has been voted by two other players so admin can vote other player  
+                  players.current[index].voted[0] = username; // admin votes the player
                   previousVotedIndex.current = index;
                 } else {
                   setMessage("You can't vote this player.");
@@ -339,46 +351,49 @@ export default function Vote() {
               }
             }
           } else { // if the user is player
-            if(players[index].voted[0] != '') { // if the player is voted by admin
-              if(players[index].voted[1] == username || players[index].voted[2] == username) { // if the player is voted by you
+            if(players.current[index].voted[0] != '') { // if the player is voted by admin
+              if(players.current[index].voted[1] == username || players.current[index].voted[2] == username) { // if the player is voted by you
                 setMessage("You have already voted this player.");
                 setSeverity('warning');
                 setOpenNotify(true);
               } else {
-                if(players[index].voted[1] != '') { // if the first vote is done.
+                if(players.current[index].voted[1] != '') { // if the first vote is done.
                   
-                  players[index].voted[2] = username; 
+                  players.current[index].voted[2] = username; 
                   // make decision of order of player
-                  let totalPlayerCount = players.filter(player => {
+                  let totalPlayerCount = players.current.filter(player => {
                     if(player)
                       return true;
-                    return false;
                   }).length;
-                  let votedCount = players.filter(player => {
+                  let votedCount = players.current.filter(player => {
                     if(player) 
-                      return player.voted[0] != '' && player.voted[0] != '' && player.voted[0] != '';
+                      return player.voted[0] != '' && player.voted[1] != '' && player.voted[2] != '';
                   }).length;
-                  players[index].order = totalPlayerCount - votedCount;
+                  players.current[index].order = totalPlayerCount - votedCount;
                 } else { 
-                  players[index].voted[1] = username; 
+                  players.current[index].voted[1] = username; 
                   // count the timeout until 10 mins
                   let time = 0;
                   let timeHandler = setInterval(() => {
-                    if(players[index].voted[2] == '') {
-                      time ++;
-                      console.log(time)
-                      if(time >= TIMEOUT_LIMIT)
-                      {
-                        clearInterval(timeHandler);
-                        players[index].voted[0] = '';
-                        axios.post(`${process.env.API_URL}/game/vote/${ JSON.stringify({ code: code.substring(0, 4), players: players.filter(player => {
-                            return player != null 
-                          })}) }`).then(res => {
-                          if(res.data.success) {
-                            setGameInfo(players);
-                          }
-                        }); 
-                      } 
+                    console.log(players.current)
+                    if(players.current[index].voted[2] != '') {
+                      clearInterval(timeHandler);
+                    } else {
+                      if(players.current[index].voted[0] != '' && players.current[index].voted[1] != '' && players.current[index].voted[2] == '') {
+                        time ++;
+                        if(time >= TIMEOUT_LIMIT)
+                        {
+                          clearInterval(timeHandler);
+                          players.current[index].voted[0] = players.current[index].voted[1] = players.current[index].voted[2] = '';
+                          axios.post(`${process.env.API_URL}/game/vote/${ JSON.stringify({ code: code.substring(0, 4), players: players.current.filter(player => {
+                              return player != null 
+                            })}) }`).then(res => {
+                            if(res.data.success) {
+                              setGameInfo(players.current);
+                            }
+                          }); 
+                        } 
+                      }
                     }
                   }, 1000);
                 }
@@ -392,11 +407,11 @@ export default function Vote() {
         }
   
         // update the game state 
-        axios.post(`${ process.env.API_URL }/game/vote/${ JSON.stringify({ code: code.substring(0, 4), players: players.filter(player => {
+        axios.post(`${ process.env.API_URL }/game/vote/${ JSON.stringify({ code: code.substring(0, 4), players: players.current.filter(player => {
             return player != null 
           })}) }`).then(res => {
           if(res.data.success) {
-            setGameInfo(players);
+            setGameInfo(players.current);
           }
         });        
         
@@ -532,7 +547,7 @@ export default function Vote() {
           }
           <Card sx={{ width: '60%', height: '50%', borderRadius: 15, position: 'absolute', top: '25%', left: '20%', borderColor: 'red', borderWidth: '5px' }} >
             <Typography sx={{ display: priceHidden, position: 'absolute', left: '25%',top: '15%', width: '50%', height: '20%', textAlign: 'center'}} variant='h3'>
-              1st: {(totalPrice * 0.5).toFixed(2)}
+              1st:{(totalPrice * 0.5).toFixed(2)}
             </Typography>
             <Typography sx={{ display: priceHidden, position: 'absolute', left: '25%',top: '40%', width: '50%', height: '20%', textAlign: 'center'}} variant='h3'>
               2nd:{(totalPrice * 0.3).toFixed(2)}
