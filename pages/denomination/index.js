@@ -25,13 +25,14 @@ export default function Denomination() {
   const [color10, setColor10] = React.useState('primary');
   const [amount, setAmount] = React.useState(0);
   const [username, setUsername] = React.useState('');
+  const [confirmAmountButtonEnabled, setConfirmAmountButtonEnabled] = React.useState(true);
 
   const SetAmount2 = () => {
     setAmount(2);
     setColor2('success');
     setColor5('primary');
     setColor10('primary');
-
+    setConfirmAmountButtonEnabled(false);
   };
 
   const SetAmount5 = () => {
@@ -39,6 +40,7 @@ export default function Denomination() {
     setColor2('primary');
     setColor5('success');
     setColor10('primary');
+    setConfirmAmountButtonEnabled(false);
   
   }
 
@@ -47,6 +49,7 @@ export default function Denomination() {
     setColor2('primary');
     setColor5('primary');
     setColor10('success');
+    setConfirmAmountButtonEnabled(false);
   }
 
  // confirm amount and go to connect wallet page 
@@ -173,6 +176,7 @@ export default function Denomination() {
                 variant="contained"
                 sx={{ mt: 3, mb: 2 }}
                 onClick={ConfirmAmount}
+                disabled={confirmAmountButtonEnabled}
               >
                 Confirm Amount
               </Button>

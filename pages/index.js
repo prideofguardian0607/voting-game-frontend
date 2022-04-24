@@ -7,7 +7,9 @@ import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Container from '@mui/material/Container';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
-import Router from 'next/router'
+import Router from 'next/router';
+import { useEffect } from 'react';
+import axios from 'axios';
 
 const theme = createTheme();
 
@@ -23,6 +25,34 @@ export default function SignIn() {
       password: data.get('password'),
     });
   };
+
+  useEffect(() => {
+    const GetStock = async () => {
+      let response;
+      try {
+        response = await axios.get('https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest?start=1&limit=5000&convert=USD', {
+          headers: {
+            'X_CMC_PRO_API_KEY': 'ab321ac9-d05e-4fbd-be49-d1dc83abf80d',
+          },
+        });
+        console.log(response)
+
+      } catch(ex) {
+        response = null;
+        // error
+        console.log(ex);
+
+      }
+
+      // let stock = await axios.get('https://api.coinmarketcap.com/data-api/v3/price-prediction/query/half-year?cryptoId=3890');
+      // let stock = await axios.get('https://api.coinmarketcap.com/data-api/v3/price-prediction/query/half-year?cryptoId=3890');
+      // let stock = await axios.get('wss://coinranking.com/api/real-time/rates');
+      // console.log(stock);
+    }
+
+    GetStock();
+  }, [])
+
 
   const information = [
     {

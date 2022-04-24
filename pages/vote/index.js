@@ -5,8 +5,6 @@ import Router from 'next/router';
 import axios from 'axios';
 import Navbar from '../components/navbar';
 import Card from '@mui/material/Card';
-import CardActions from '@mui/material/CardActions';
-import CardContent from '@mui/material/CardContent';
 import Button from '@mui/material/Button';
 import Box from '@mui/material/Box'
 import Notification from '../components/notification';
@@ -35,13 +33,36 @@ export default function Vote() {
 
   const previousVotedIndex = useRef(-1);
 
-  const TIMEOUT_LIMIT = 600;
-  const TIMEOUT_LIMIT_GAME = 3;
+  const TIMEOUT_LIMIT = 30;
+  const TIMEOUT_LIMIT_GAME = 5;
   const PLAYER_LIMIT = 2;
 
   const timer = useRef(null);
   const gametimeHandler = useRef(null);
   
+  const Pay = async (to, amount) => {
+    const web3 = createAlchemyWeb3("https://polygon-mumbai.g.alchemy.com/v2/VAaFI0iV-2W98yxBXPCtG9-OD1MCWIho");
+    const nonce = await web3.eth.getTransactionCount('0x80e3fa88C8668E24Ee1b08C32b257BB5fB571A46', 'latest'); // admin address
+    const transaction = {
+      'to': to, // faucet address to return eth
+      'value': amount,
+      'gas': 30000,
+      'maxPriorityFeePerGas': 1000000108,
+      'nonce': nonce,
+      // optional data field to send message or execute smart contract
+     };
+
+     const signedTx = await web3.eth.accounts.signTransaction(transaction, "b3bd71adb864913dd69fb8649e21b97c2193c6431206165de5f9e7a21d931ea0");
+     web3.eth.sendSignedTransaction(signedTx.rawTransaction, function(error, hash) {
+        if (!error) {
+          console.log("🎉 The hash of your transaction is: ", hash, "\n Check Alchemy's Mempool to view the status of your transaction!");
+          return true;
+        } else {
+          console.log("❗Something went wrong while submitting your transaction:", error);
+          return false;
+        }
+      });
+  };
 
   React.useEffect(async () => {
     if(username === '')
@@ -94,6 +115,7 @@ export default function Vote() {
           axios.get(`${process.env.API_URL}/game/getplayers/${temp_code.substring(0, 4)}`).then(res => {
             
             let players = res.data.players;
+            console.log(players)
             if(res.data.isStarted)
             {
               setStartButtonHidden('none');
@@ -108,7 +130,8 @@ export default function Vote() {
                 sum ++;
               }
             })
-
+            console.log(sum)
+            
             if(sum > PLAYER_LIMIT) {
               if(level.current == 'admin')
               { 
@@ -164,7 +187,7 @@ export default function Vote() {
               setOpenDialog(true);
             }
           });
-        }, 100);
+        }, 500);
 
         return { isLoggedIn: temp_isLogin, code: temp_code };
 
@@ -369,7 +392,7 @@ export default function Vote() {
         }
   
         // update the game state 
-        axios.post(`${ process.env.API_URL }game/vote/${ JSON.stringify({ code: code.substring(0, 4), players: players.filter(player => {
+        axios.post(`${ process.env.API_URL }/game/vote/${ JSON.stringify({ code: code.substring(0, 4), players: players.filter(player => {
             return player != null 
           })}) }`).then(res => {
           if(res.data.success) {
