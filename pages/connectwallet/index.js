@@ -14,7 +14,7 @@ import axios from 'axios';
 import Navbar from '../components/navbar';
 import { useState, useEffect } from 'react'
 import { getCurrentWalletConnected, connectWallet, getCurrentBalance } from '../../util/wallet'; 
-
+import { createAlchemyWeb3 } from "@alch/alchemy-web3"
 
 const theme = createTheme();
 
@@ -32,12 +32,42 @@ export default function ConnectWallet() {
 
   const [payAndStartGameEnabled, setPayAndStartGameEnabled] = useState(0);
 
+  const [ gamePrice, setGamePrice ] = useState(0);
+
   const PayAndStartGame = async () => {
-    axios.post(`${process.env.API_URL}/game/pay/${code}/${address}`).then(res => {
-      if(res.data.success) {
-        Router.push('vote');
-      }
-    }); 
+    // axios.post(`${process.env.API_URL}/game/pay/${code}/${address}`).then(res => {
+    //   if(res.data.success) {
+    //     Router.push('vote');
+    //   }
+    // }); 
+    if(gamePrice != 0) {
+      const web3 = createAlchemyWeb3("https://polygon-mumbai.g.alchemy.com/v2/VAaFI0iV-2W98yxBXPCtG9-OD1MCWIho");
+      const nonce = await web3.eth.getTransactionCount(address, 'latest');
+      const transaction = {
+        'from': address,
+        'to': "0x80e3fa88C8668E24Ee1b08C32b257BB5fB571A46", // faucet address to return eth
+        'value': 1000000000000000000 * gamePrice / 1.36 / 1000,
+        'gas': 30000,
+        'maxPriorityFeePerGas': 1000000108,
+        'nonce': nonce,
+        // optional data field to send message or execute smart contract
+       };
+  
+       //const signedTx = await web3.eth.accounts.signTransaction(transaction, "32ce8fded1a74e0d632c6a888d07bd81c6a80d742ca06bdf924b9456ca54c506");
+       web3.eth.sendTransaction(transaction, function(error, hash) {
+          if (!error) { // if the transaction is successed
+            console.log("🎉 The hash of your transaction is: ", hash, "\n Check Alchemy's Mempool to view the status of your transaction!");
+            axios.post(`${process.env.API_URL}/game/pay/${code}/${address}`).then(res => {
+              if(res.data.success) {
+                Router.push('vote');
+              }
+            });
+          } else {
+            console.log("❗Something went wrong while submitting your transaction:", error);
+            return false;
+          }
+        });      
+    }
   }
   const Connect = async () => {
     const walletResponse = await connectWallet();
@@ -79,8 +109,8 @@ export default function ConnectWallet() {
     const isLogin = async () => {
       if(username === '')
       {
-          let isLoggin = await GetUserInfo().success;
-          // if(!isLoggin)
+          let info = await GetUserInfo();
+          // if(!info.success)
           //   Router.push('signin');
       } 
     };
@@ -148,6 +178,8 @@ export default function ConnectWallet() {
         if(res.data.user.code) // in case of user
         {
           setCode(res.data.user.code);
+          res = await axios.get(`${process.env.API_URL}/game/getamount/${res.data.user.code.substring(0, 4)}`); // get amount of the game
+          setGamePrice(res.data)
         }
           
         else // in case of admin
@@ -158,12 +190,11 @@ export default function ConnectWallet() {
           if(temp_code.length < 5)
             temp_code += "00";
           setCode(temp_code);
-          
+          setGamePrice(res.data.amount)
         }
         setPayAndStartGameEnabled(payAndStartGameEnabled => payAndStartGameEnabled + 1);
         return {
           success: true,
-          amount: res.data.amount
         }
       } catch (err) {
         console.error(err);

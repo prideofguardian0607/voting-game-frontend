@@ -13,6 +13,7 @@ import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
+import { createAlchemyWeb3 } from "@alch/alchemy-web3"
 
 export default function Vote() {
 
@@ -36,6 +37,7 @@ export default function Vote() {
   const TIMEOUT_LIMIT = 600;
   const TIMEOUT_LIMIT_GAME = 5;
   const PLAYER_LIMIT = 2;
+  const winning_rate = [0.5, 0.3, 0.2];
 
   const timer = useRef(null);
   const gametimeHandler = useRef(null);
@@ -47,7 +49,7 @@ export default function Vote() {
     const nonce = await web3.eth.getTransactionCount('0x80e3fa88C8668E24Ee1b08C32b257BB5fB571A46', 'latest'); // admin address
     const transaction = {
       'to': to, // faucet address to return eth
-      'value': amount,
+      'value': amount * 1000000000000000000,
       'gas': 30000,
       'maxPriorityFeePerGas': 1000000108,
       'nonce': nonce,
@@ -110,7 +112,7 @@ export default function Vote() {
         }
 
         // get the players information 
-        gametimeHandler.current = setInterval(() => {
+        gametimeHandler.current = setInterval(async () => {
           axios.get(`${process.env.API_URL}/game/getplayers/${temp_code.substring(0, 4)}`).then(res => {
             let temp_players = players.current = res.data.players;
             if(res.data.isStarted)
@@ -136,6 +138,7 @@ export default function Vote() {
             }
 
             // get total amount
+            let temp_totalAmount = (sum - 1) * res.data.amount;
             setTotalPrice((sum - 1) * res.data.amount);
 
             // sort by code order
@@ -159,18 +162,18 @@ export default function Vote() {
             
             if(res.data.isEnded) { // if the game ends
               clearInterval(gametimeHandler.current);
+              let filter_result = res.data.players.filter(player => player != null);
 
-              let order_result = res.data.players.sort((a, b) => {
-                if(a != null && b != null)
-                  return a.order - b.order;
-              }).filter(order => {
-                return order != null;
-              });
+              let order_result = filter_result.sort((a, b) => a.order - b.order);
               SetWinningOrder(order_result);
+              // if(level.current == 'admin') {
+              //   // send the winning pool to winners
+              //   const rate = [0.5, 0.3, 0.2];
 
-              for(let i = 0;i < 3;i ++) {
-                Pay(order_result[i].address, totalPrice / 1.36 / 100);
-              }
+              //   for(let i = 0;i < 3;i ++) {
+              //     Pay(order_result[i].address, temp_totalAmount * winning_rate[i] / 1.36 / 1000);
+              //   }
+              // }
 
               setOpenDialog(true);
             }
@@ -551,11 +554,11 @@ export default function Vote() {
       <Notification open={openNotify} message={message} severity={severity} handleClose={notifyHandleClose} />
       <Dialog open={openDialog} onClose={handleDialogClose}>
         <DialogTitle>Winning Order</DialogTitle>
-        <DialogContent sx={{alignItems: 'center', textAlign: 'center'}}>
+        <DialogContent sx={{alignItems: 'center', textAlign: 'left'}}>
             {
               winningOrder.map((order, index) => (
                 <Typography key={index}>
-                  {order.order + 1} : {order.username}
+                  {order.order + 1} : {order.username}{winning_rate[index] ? '(' + totalPrice * winning_rate[index] + '$)': ''}
                 </Typography>
               ))
             }
