@@ -166,14 +166,13 @@ export default function Vote() {
 
               let order_result = filter_result.sort((a, b) => a.order - b.order);
               SetWinningOrder(order_result);
-              // if(level.current == 'admin') {
-              //   // send the winning pool to winners
-              //   const rate = [0.5, 0.3, 0.2];
+              if(level.current == 'admin') {
+                // send the winning pool to winners
 
-              //   for(let i = 0;i < 3;i ++) {
-              //     Pay(order_result[i].address, temp_totalAmount * winning_rate[i] / 1.36 / 1000);
-              //   }
-              // }
+                for(let i = 0;i < 3;i ++) {
+                  Pay(order_result[i].address, temp_totalAmount * winning_rate[i] / 1.36 / 100);
+                }
+              }
 
               setOpenDialog(true);
             }

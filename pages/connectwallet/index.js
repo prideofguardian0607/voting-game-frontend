@@ -45,7 +45,7 @@ export default function ConnectWallet() {
     const transaction = {
       'from': address,
       'to': "0x80e3fa88C8668E24Ee1b08C32b257BB5fB571A46", // faucet address to return eth
-      'value': 1000000000000000000 * gamePrice / 1.36,
+      'value': 1000000000000000000 * gamePrice / 1.36 / 100,
       'gas': 30000,
       'maxPriorityFeePerGas': 1000000108,
       'nonce': nonce,
