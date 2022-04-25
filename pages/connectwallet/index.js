@@ -180,6 +180,7 @@ export default function ConnectWallet() {
           setCode(res.data.user.code);
           res = await axios.get(`${process.env.API_URL}/game/getamount/${res.data.user.code.substring(0, 4)}`); // get amount of the game
           setGamePrice(res.data)
+          setPayAndStartGameEnabled(payAndStartGameEnabled => payAndStartGameEnabled + 1);
         }
           
         else // in case of admin
@@ -191,8 +192,9 @@ export default function ConnectWallet() {
             temp_code += "00";
           setCode(temp_code);
           setGamePrice(res.data.amount)
+          setPayAndStartGameEnabled(payAndStartGameEnabled => payAndStartGameEnabled + 1);
         }
-        setPayAndStartGameEnabled(payAndStartGameEnabled => payAndStartGameEnabled + 1);
+        
         return {
           success: true,
         }
