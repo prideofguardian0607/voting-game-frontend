@@ -32,7 +32,7 @@ export default function ConnectWallet() {
 
   const [payAndStartGameEnabled, setPayAndStartGameEnabled] = useState(0);
 
-  const [ gamePrice, setGamePrice ] = useState(0);
+  const [ gamePrice, setGamePrice ] = useState(true);
 
   const PayAndStartGame = async () => {
     // axios.post(`${process.env.API_URL}/game/pay/${code}/${address}`).then(res => {
@@ -74,7 +74,7 @@ export default function ConnectWallet() {
     if(address !== '') {
       let balance = await getCurrentBalance(walletResponse.address)
       setBalance(balance);
-      setPayAndStartGameEnabled(payAndStartGameEnabled => payAndStartGameEnabled + 1);
+      setPayAndStartGameEnabled(false);
     } 
   }
   
@@ -124,7 +124,7 @@ export default function ConnectWallet() {
       setStatus(status); 
       if(address !== '') {
         let balance = await getCurrentBalance(address)
-        setPayAndStartGameEnabled(payAndStartGameEnabled => payAndStartGameEnabled + 1);
+        setPayAndStartGameEnabled(false);
         setBalance(balance);
       }
     }
@@ -140,9 +140,10 @@ export default function ConnectWallet() {
           
           let balance = await getCurrentBalance(accounts[0]);
           setBalance(balance);
+          setPayAndStartGameEnabled(false);
           setStatus("👆🏽 Write a message in the text-field above.");
         } else {
-          setPayAndStartGameEnabled(payAndStartGameEnabled => payAndStartGameEnabled - 1);
+          setPayAndStartGameEnabled(true);
           setAddress("");
           setStatus("🦊 Connect to Metamask using the top right button.");
         }
@@ -180,7 +181,7 @@ export default function ConnectWallet() {
           setCode(res.data.user.code);
           res = await axios.get(`${process.env.API_URL}/game/getamount/${res.data.user.code.substring(0, 4)}`); // get amount of the game
           setGamePrice(res.data)
-          setPayAndStartGameEnabled(payAndStartGameEnabled => payAndStartGameEnabled + 1);
+          
         }
           
         else // in case of admin
@@ -192,7 +193,7 @@ export default function ConnectWallet() {
             temp_code += "00";
           setCode(temp_code);
           setGamePrice(res.data.amount)
-          setPayAndStartGameEnabled(payAndStartGameEnabled => payAndStartGameEnabled + 1);
+          
         }
         
         return {
@@ -243,7 +244,7 @@ export default function ConnectWallet() {
               variant="contained"
               sx={{ mt: 3, mb: 2 }}
               onClick={PayAndStartGame}
-              disabled={payAndStartGameEnabled >= 1 ? false : true}
+              disabled={payAndStartGameEnabled}
             >
               Pay and start game
             </Button>
