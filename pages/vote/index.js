@@ -36,7 +36,7 @@ export default function Vote() {
 
   const TIMEOUT_LIMIT = 600;
   const TIMEOUT_LIMIT_GAME = 5;
-  const PLAYER_LIMIT = 2;
+  const PLAYER_LIMIT = 5;
   const winning_rate = [0.5, 0.3, 0.2];
 
   const timer = useRef(null);
@@ -170,7 +170,8 @@ export default function Vote() {
                 // send the winning pool to winners
 
                 for(let i = 0;i < 3;i ++) {
-                  Pay(order_result[i].address, temp_totalAmount * winning_rate[i] / 1.36 / 100);
+                  console.log(temp_totalAmount * winning_rate[i] / 1.36 / 100)
+                  //Pay(order_result[i].address, temp_totalAmount * winning_rate[i] / 1.36 / 100);
                 }
               }
 
