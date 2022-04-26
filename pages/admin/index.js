@@ -126,9 +126,10 @@ export default function Admin() {
     const [password, setPassword] = React.useState('');
     const [email, setEmail] = React.useState('');
     const [referredby, setReferredby] = React.useState('');
+    
     const [rows, setRows] = React.useState([]);
 
-    const [username, setUsername] = React.useState('');
+    
 
     const [id, setId] = React.useState(0);
 

@@ -35,7 +35,7 @@ export default function Vote() {
   const previousVotedIndex = useRef(-1);
 
   const TIMEOUT_LIMIT = 600;
-  const TIMEOUT_LIMIT_GAME = 5;
+  const TIMEOUT_LIMIT_GAME = 2;
   const PLAYER_LIMIT = 5;
   const winning_rate = [0.5, 0.3, 0.2];
 
@@ -166,14 +166,14 @@ export default function Vote() {
 
               let order_result = filter_result.sort((a, b) => a.order - b.order);
               SetWinningOrder(order_result);
-              if(level.current == 'admin') {
-                // send the winning pool to winners
+              // if(level.current == 'admin') {
+              //   // send the winning pool to winners
 
-                for(let i = 0;i < 3;i ++) {
-                  console.log(temp_totalAmount * winning_rate[i] / 1.36 / 100)
-                  //Pay(order_result[i].address, temp_totalAmount * winning_rate[i] / 1.36 / 100);
-                }
-              }
+              //   for(let i = 0;i < 3;i ++) {
+              //     console.log(temp_totalAmount * winning_rate[i] / 1.36 / 100)
+              //     //Pay(order_result[i].address, temp_totalAmount * winning_rate[i] / 1.36 / 100);
+              //   }
+              // }
 
               setOpenDialog(true);
             }
@@ -449,6 +449,7 @@ export default function Vote() {
   const [openDialog, setOpenDialog] = React.useState(false);
   const handleDialogClose = () => {
       setOpenDialog(false);
+      Router.push('signin');
   };
 
   return (

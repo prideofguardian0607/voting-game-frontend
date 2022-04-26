@@ -13,8 +13,9 @@ import Router from 'next/router';
 import axios from 'axios';
 import Navbar from '../components/navbar';
 import { useState, useEffect } from 'react'
-import { getCurrentWalletConnected, connectWallet, getCurrentBalance } from '../../util/wallet'; 
-import { createAlchemyWeb3 } from "@alch/alchemy-web3"
+import { getCurrentWalletConnected, connectWallet, getCurrentBalance, disconnectWallet } from '../../util/wallet'; 
+import { createAlchemyWeb3 } from "@alch/alchemy-web3";
+import { useWeb3 } from "@3rdweb/hooks";
 
 const theme = createTheme();
 
@@ -34,48 +35,62 @@ export default function ConnectWallet() {
 
   const [ gamePrice, setGamePrice ] = useState(true);
 
-  const PayAndStartGame = async () => {
-    // axios.post(`${process.env.API_URL}/game/pay/${code}/${address}`).then(res => {
-    //   if(res.data.success) {
-    //     Router.push('vote');
-    //   }
-    // }); 
-    const web3 = createAlchemyWeb3("https://polygon-mumbai.g.alchemy.com/v2/VAaFI0iV-2W98yxBXPCtG9-OD1MCWIho");
-    const nonce = await web3.eth.getTransactionCount(address, 'latest');
-    const transaction = {
-      'from': address,
-      'to': "0x80e3fa88C8668E24Ee1b08C32b257BB5fB571A46", // faucet address to return eth
-      'value': 1000000000000000000 * gamePrice / 1.36 / 100,
-      'gas': 30000,
-      'maxPriorityFeePerGas': 1000000108,
-      'nonce': nonce,
-      // optional data field to send message or execute smart contract
-      };
+  const [ disconnectButtonDisabled, setDisconnectButtonDisabled] = useState(true);
 
-      //const signedTx = await web3.eth.accounts.signTransaction(transaction, "32ce8fded1a74e0d632c6a888d07bd81c6a80d742ca06bdf924b9456ca54c506");
-      web3.eth.sendTransaction(transaction, function(error, hash) {
-        if (!error) { // if the transaction is successed
-          console.log("🎉 The hash of your transaction is: ", hash, "\n Check Alchemy's Mempool to view the status of your transaction!");
-          axios.post(`${process.env.API_URL}/game/pay/${code}/${address}`).then(res => {
-            if(res.data.success) {
-              Router.push('vote');
-            }
-          });
-        } else {
-          console.log("❗Something went wrong while submitting your transaction:", error);
-          return false;
-        }
-      });      
+  const PayAndStartGame = async () => {
+    axios.post(`${process.env.API_URL}/game/pay/${code}/${address}`).then(res => {
+      if(res.data.success) {
+        Router.push('vote');
+      }
+    }); 
+    // const web3 = createAlchemyWeb3("https://polygon-mumbai.g.alchemy.com/v2/VAaFI0iV-2W98yxBXPCtG9-OD1MCWIho");
+    // const nonce = await web3.eth.getTransactionCount(address, 'latest');
+    // const transaction = {
+    //   'from': address,
+    //   'to': "0x80e3fa88C8668E24Ee1b08C32b257BB5fB571A46", // faucet address to return eth
+    //   'value': 1000000000000000000 * gamePrice / 1.36 / 100,
+    //   'gas': 30000,
+    //   'maxPriorityFeePerGas': 1000000108,
+    //   'nonce': nonce,
+    //   // optional data field to send message or execute smart contract
+    //   };
+
+    //   //const signedTx = await web3.eth.accounts.signTransaction(transaction, "32ce8fded1a74e0d632c6a888d07bd81c6a80d742ca06bdf924b9456ca54c506");
+    //   web3.eth.sendTransaction(transaction, function(error, hash) {
+    //     if (!error) { // if the transaction is successed
+    //       console.log("🎉 The hash of your transaction is: ", hash, "\n Check Alchemy's Mempool to view the status of your transaction!");
+    //       axios.post(`${process.env.API_URL}/game/pay/${code}/${address}`).then(res => {
+    //         if(res.data.success) {
+    //           Router.push('vote');
+    //         }
+    //       });
+    //     } else {
+    //       console.log("❗Something went wrong while submitting your transaction:", error);
+    //       return false;
+    //     }
+    //   });      
 
   }
   const Connect = async () => {
     const walletResponse = await connectWallet();
     setAddress(walletResponse.address);
-    if(address !== '') {
+    if(walletResponse.address != '') {
       let balance = await getCurrentBalance(walletResponse.address)
       setBalance(balance);
       setPayAndStartGameEnabled(false);
+      setDisconnectButtonDisabled(false);
     } 
+  }
+
+  const Disconnect = async () => {
+    disconnectWallet();
+    let isDisconnected = await disconnectWallet();
+    if(isDisconnected)
+    {
+      setDisconnectButtonDisabled(true);
+      setAddress('');
+      setBalance(0);
+    }
   }
   
   useEffect(async () => {
@@ -126,6 +141,7 @@ export default function ConnectWallet() {
         let balance = await getCurrentBalance(address)
         setPayAndStartGameEnabled(false);
         setBalance(balance);
+        setDisconnectButtonDisabled(false);
       }
     }
     fetchWallet();
@@ -141,9 +157,11 @@ export default function ConnectWallet() {
           let balance = await getCurrentBalance(accounts[0]);
           setBalance(balance);
           setPayAndStartGameEnabled(false);
+          setDisconnectButtonDisabled(false);
           setStatus("👆🏽 Write a message in the text-field above.");
         } else {
           setPayAndStartGameEnabled(true);
+          setDisconnectButtonDisabled(true);
           setAddress("");
           setStatus("🦊 Connect to Metamask using the top right button.");
         }
@@ -229,7 +247,10 @@ export default function ConnectWallet() {
           <Box component="form" noValidate sx={{ mt: 1 }}>
             <Button
               fullWidth
-              onClick={Connect}
+              onClick={() => {
+                Connect();
+                Connect();
+              }}
               variant="contained"
               sx={{ mt: 3, mb: 2 }}
             >
@@ -238,6 +259,15 @@ export default function ConnectWallet() {
                 + "..." 
                 + String(address).substring(38) + "(" + parseFloat(balance).toFixed(3) + "MATIC )" : "Connect Wallet"
               }
+            </Button>
+            <Button
+              fullWidth
+              variant="contained"
+              sx={{ mt: 3, mb: 2 }}
+              onClick={Disconnect}
+              disabled={disconnectButtonDisabled}
+            >
+              Disconnect Wallet
             </Button>
             <Button
               fullWidth

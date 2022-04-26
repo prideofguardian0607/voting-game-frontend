@@ -166,7 +166,12 @@ export default function Denomination() {
                 fullWidth
                 label="Own Amount"
                 onChange={(e) => {
-                  setAmount(e.target.value)
+                  setAmount(e.target.value);
+                  if(e.target.value > 0) {
+                    setConfirmAmountButtonEnabled(false);
+                  } else {
+                    setConfirmAmountButtonEnabled(true);
+                  }
                 }}
                 value={amount}
                 autoComplete="current-password"
