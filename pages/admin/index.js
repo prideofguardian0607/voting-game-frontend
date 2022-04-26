@@ -129,7 +129,7 @@ export default function Admin() {
     
     const [rows, setRows] = React.useState([]);
 
-    
+    const [username, setUsername] = React.useState('');
 
     const [id, setId] = React.useState(0);
 
