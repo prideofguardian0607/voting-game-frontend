@@ -7,8 +7,6 @@
     "export": "next export",
     "lint": "next lint"
   },
-  "homepage": ".",
-  "proxy": "https://cors-anywhere.herokuapp.com/",
   "dependencies": {
     "@3rdweb/hooks": "^1.9.2",
     "@3rdweb/react": "^1.9.3",
