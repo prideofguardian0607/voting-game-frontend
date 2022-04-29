@@ -93,7 +93,7 @@ export default function SignUp() {
           setMessage('Email sent');
           setSeverity('success');
           setOpen(true);
-          
+          localStorage.removeItem('register_info');
         } else {
           setMessage('Email not sent'); 
           setSeverity('warning');
@@ -257,9 +257,6 @@ export default function SignUp() {
                           fullWidth
                           variant="contained"
                           sx={{ mt: 2, mb: 2 }}
-                          onClick={() => {
-                            localStorage.removeItem('register_info');
-                          }}
                       >
                           Next
                       </Button>

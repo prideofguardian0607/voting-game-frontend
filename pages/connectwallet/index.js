@@ -37,6 +37,8 @@ export default function ConnectWallet() {
 
   const [ disconnectButtonDisabled, setDisconnectButtonDisabled] = useState(true);
 
+  const [trending, setTrending] = useState(0);
+
   const PayAndStartGame = async () => {
     axios.post(`${process.env.API_URL}/game/pay/${code}/${address}`).then(res => {
       if(res.data.success) {
@@ -48,7 +50,7 @@ export default function ConnectWallet() {
     // const transaction = {
     //   'from': address,
     //   'to': "0x80e3fa88C8668E24Ee1b08C32b257BB5fB571A46", // faucet address to return eth
-    //   'value': 1000000000000000000 * gamePrice / 1.36 / 100,
+    //   'value': 1000000000000000000 * gamePrice / trending / 100,
     //   'gas': 30000,
     //   'maxPriorityFeePerGas': 1000000108,
     //   'nonce': nonce,
@@ -95,31 +97,12 @@ export default function ConnectWallet() {
   
   useEffect(async () => {
 
-    // const GetStock = async () => {
-    //   let response;
-    //   try {
-    //     response = await axios.get('https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest?start=1&limit=5000&convert=USD', {
-    //       headers: {
-    //         'X_CMC_PRO_API_KEY': 'ab321ac9-d05e-4fbd-be49-d1dc83abf80d',
-    //         'Access-Control-Allow-Origin': 'http://localhost:8080'
-    //       },
-    //     });
-    //     console.log(response);
+    const GetStock = async () => {
+      let res = await axios.get('https://api.coinmarketcap.com/data-api/v3/cryptocurrency/market-pairs/latest?slug=polygon&start=1&limit=1&category=spot&sort=cmc_rank_advanced');
+      setTrending(res.data.data.marketPairs[0].price);
+    }
 
-    //   } catch(ex) {
-    //     response = null;
-    //     // error
-    //     console.log(ex);
-
-    //   }
-
-    //   // let stock = await axios.get('https://api.coinmarketcap.com/data-api/v3/price-prediction/query/half-year?cryptoId=3890');
-    //   // let stock = await axios.get('https://api.coinmarketcap.com/data-api/v3/price-prediction/query/half-year?cryptoId=3890');
-    //   // let stock = await axios.get('wss://coinranking.com/api/real-time/rates');
-    //   // console.log(stock);
-    // }
-
-    // await GetStock();
+    await GetStock();
     const isLogin = async () => {
       if(username === '')
       {
@@ -258,7 +241,7 @@ export default function ConnectWallet() {
                 String(address).length > 0 ? String(address).substring(0, 6) 
                 + "..." 
                 + String(address).substring(38) + "(" + parseFloat(balance).toFixed(3) + "MATIC )" : "Connect Wallet"
-              }
+              } 
             </Button>
             <Button
               fullWidth
