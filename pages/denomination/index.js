@@ -16,6 +16,7 @@ import Router from 'next/router';
 import axios from 'axios'
 import Navbar from '../components/navbar'
 import Loader from './../components/loader';
+import Notification from '../components/notification';
 
 const theme = createTheme();
 
@@ -27,7 +28,16 @@ export default function Denomination() {
   const [amount, setAmount] = React.useState(0);
   const [username, setUsername] = React.useState('');
   const [confirmAmountButtonEnabled, setConfirmAmountButtonEnabled] = React.useState(true);
-
+  //Notification handle
+  const [message, setMessage] = React.useState('');
+  const [openNotify, setOpenNotify] = React.useState(false);
+  const [severity, setSeverity] = React.useState('success');
+  const notifyHandleClose = (event, reason) => {
+    if (reason === 'clickaway') {
+      return;
+    }
+    setOpenNotify(false);
+  };
   const SetAmount2 = () => {
     setAmount(2);
     setColor2('success');
@@ -64,6 +74,11 @@ export default function Denomination() {
       if(res.data.success == true) {
         // setLoaderHidden('none');
         Router.push('connectwallet');
+      } else {
+        setLoaderHidden('none');
+        setOpenNotify(true);
+        setSeverity('warning');
+        setMessage('Sorry but something went wrong. Please try again.');
       }
     })
     
@@ -191,6 +206,7 @@ export default function Denomination() {
             </Box>
           </Box>
         </Container>
+        <Notification open={openNotify} message={message} severity={severity} handleClose={notifyHandleClose} />  
       </ThemeProvider>    
     </>
   );
