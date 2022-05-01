@@ -1,7 +1,7 @@
 import Button from '@mui/material/Button'
 import Router from 'next/router'
-import { ThirdwebWeb3Provider } from "@3rdweb/hooks";
-
+import Stack from '@mui/material/Stack';
+import CircularProgress from '@mui/material/CircularProgress';
 const connectors = {
     injected: {},
 }
@@ -17,6 +17,7 @@ const MyApp = ({ Component, pageProps }) => {
             > */}
                 <Component {...pageProps} />
             {/* </ThirdwebWeb3Provider> */}
+            
             <Button sx={{position: 'absolute', bottom: 10, left: 10}} onClick={
                 () => {
                     Router.back();

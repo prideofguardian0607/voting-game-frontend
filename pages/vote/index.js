@@ -178,7 +178,7 @@ export default function Vote() {
               setOpenDialog(true);
             }
           });
-        }, 500);
+        }, 1000);
 
         return { isLoggedIn: temp_isLogin, code: temp_code };
 
@@ -449,6 +449,7 @@ export default function Vote() {
   const [openDialog, setOpenDialog] = React.useState(false);
   const handleDialogClose = () => {
       setOpenDialog(false);
+      localStorage.removeItem('token');
       Router.push('signin');
   };
 

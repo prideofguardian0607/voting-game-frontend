@@ -371,11 +371,11 @@ export default function Admin() {
                     <TableHead>
                         <TableRow>
                             <StyledTableCell>No</StyledTableCell>
-                            <StyledTableCell align="center">Meta Username</StyledTableCell>
-                            <StyledTableCell align="center">Username</StyledTableCell>
-                            <StyledTableCell align="center">Password</StyledTableCell>
-                            <StyledTableCell align="center">Email</StyledTableCell>
-                            <StyledTableCell align="center">ReferredBy</StyledTableCell>
+                            <StyledTableCell align="left">Meta Username</StyledTableCell>
+                            <StyledTableCell align="left">Username</StyledTableCell>
+                            <StyledTableCell align="left">Password</StyledTableCell>
+                            <StyledTableCell align="left">Email</StyledTableCell>
+                            <StyledTableCell align="left">ReferredBy</StyledTableCell>
                         </TableRow>
                     </TableHead>
                         <TableBody>

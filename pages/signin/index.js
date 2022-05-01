@@ -16,16 +16,20 @@ import { createTheme, ThemeProvider } from '@mui/material/styles';
 import Notification from '../components/notification';
 import axios from 'axios'
 import Router from 'next/router'
+import Loader from '../components/loader';
 
 const theme = createTheme();
 
-
 export default function SignIn() {
+
+  const [loaderHidden, setLoaderHidden] = React.useState('none');
+
   const handleSubmit = async (event) => {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
     const username = data.get('username');
     const password = data.get('password');
+    
     
     if(username == ''){
       setOpenNotify(true);
@@ -40,29 +44,36 @@ export default function SignIn() {
       setSeverity('warning');
       setMessage('Password must be at least 6 digits');
     }else{
+      setLoaderHidden('block');
       axios.post(`${process.env.API_URL}/user/signin/${ username }/${ password }`
 		  )
 		  .then(res => {
         
         if(res.data.success === 'super'){ // in case of user is super admin
           
-          localStorage.setItem('token', res.data.token)
+          localStorage.setItem('token', res.data.token);
+          
           Router.push('/admin');
         }else{
           if(res.data.success === 'player') { // in case of user is player
             
-            localStorage.setItem('token', res.data.token)
-            Router.push('/connectwallet')
+            localStorage.setItem('token', res.data.token);
+            
+            Router.push('/connectwallet');
           }
           else if(res.data.success === 'admin') { // in case of user is admin
             console.log(res.data)
-            localStorage.setItem('token', res.data.token)
-            Router.push('/denomination')
+            localStorage.setItem('token', res.data.token);
+            
+            Router.push('/denomination');
+            
           } else if(res.data.success === 'started') {
+            setLoaderHidden('none');
             setOpenNotify(true);
             setSeverity('warning');
             setMessage('The game has already started.');
           } else {
+            setLoaderHidden('none');
             setOpenNotify(true);
             setSeverity('warning');
             setMessage('Invalid user');
@@ -141,6 +152,7 @@ export default function SignIn() {
           <Typography component="h1" variant="h5">
             Keeper Sign in
           </Typography>
+          <Loader hidden={loaderHidden} />
           <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 1 }}>
             <TextField
               margin="normal"
@@ -188,9 +200,12 @@ export default function SignIn() {
                 </Link>
               </Grid>
             </Grid>
+            
           </Box>
         </Box>
+        
       </Container>
+      
       <Notification open={openNotify} message={message} severity={severity} handleClose={notifyHandleClose} />  
     </ThemeProvider>
   );

@@ -15,11 +15,12 @@ import { createTheme, ThemeProvider } from '@mui/material/styles';
 import Router from 'next/router';
 import axios from 'axios'
 import Navbar from '../components/navbar'
+import Loader from './../components/loader';
 
 const theme = createTheme();
 
 export default function Denomination() {
-
+  const [loaderHidden, setLoaderHidden] = React.useState('none');
   const [color2, setColor2] = React.useState('primary');
   const [color5, setColor5] = React.useState('primary');
   const [color10, setColor10] = React.useState('primary');
@@ -58,9 +59,10 @@ export default function Denomination() {
     let current = new Date();
     
     let data = { username: username, code: GenerateCode(), amount: amount};
-
+    setLoaderHidden('block');
     axios.post(`${process.env.API_URL}/game/create/${JSON.stringify(data)}`, ).then((res) => {
       if(res.data.success == true) {
+        // setLoaderHidden('none');
         Router.push('connectwallet');
       }
     })
@@ -131,6 +133,7 @@ export default function Denomination() {
             <Typography component="h1" variant="h5">
               Game denomination
             </Typography>
+            <Loader hidden={loaderHidden} />
             <Box component="form" noValidate sx={{ mt: 1 }}>
               <Button
                 fullWidth

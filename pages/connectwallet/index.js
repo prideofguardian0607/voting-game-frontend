@@ -16,10 +16,13 @@ import { useState, useEffect } from 'react'
 import { getCurrentWalletConnected, connectWallet, getCurrentBalance, disconnectWallet } from '../../util/wallet'; 
 import { createAlchemyWeb3 } from "@alch/alchemy-web3";
 import { useWeb3 } from "@3rdweb/hooks";
+import Loader from './../components/loader';
+import Notification from '../components/notification';
 
 const theme = createTheme();
 
 export default function ConnectWallet() {
+  const [loaderHidden, setLoaderHidden] = React.useState('none');
 
   const [ username, setUsername] = useState('');
 
@@ -39,10 +42,30 @@ export default function ConnectWallet() {
 
   const [trending, setTrending] = useState(0);
 
+  //Notification handle
+  const [message, setMessage] = React.useState('');
+
+  const [openNotify, setOpenNotify] = React.useState(false);
+
+  const [severity, setSeverity] = React.useState('success');
+
+  const notifyHandleClose = (event, reason) => {
+    if (reason === 'clickaway') {
+      return;
+    }
+    setOpenNotify(false);
+  };
+
   const PayAndStartGame = async () => {
+    setLoaderHidden('block');
     axios.post(`${process.env.API_URL}/game/pay/${code}/${address}`).then(res => {
       if(res.data.success) {
         Router.push('vote');
+      } else {
+        setLoaderHidden('none');
+        setOpenNotify(true);
+        setSeverity('warning');
+        setMessage('Excuse me but go back and try again');
       }
     }); 
     // const web3 = createAlchemyWeb3("https://polygon-mumbai.g.alchemy.com/v2/VAaFI0iV-2W98yxBXPCtG9-OD1MCWIho");
@@ -219,6 +242,7 @@ export default function ConnectWallet() {
         <Typography>
           {/* {status} */}
         </Typography>
+        
         <Box
           sx={{
             marginTop: 8,
@@ -227,6 +251,7 @@ export default function ConnectWallet() {
             alignItems: 'center',
           }}
         >
+          <Loader hidden={loaderHidden} />
           <Box component="form" noValidate sx={{ mt: 1 }}>
             <Button
               fullWidth
@@ -263,7 +288,7 @@ export default function ConnectWallet() {
             </Button>
           </Box>
         </Box>
-        
+        <Notification open={openNotify} message={message} severity={severity} handleClose={notifyHandleClose} />  
       </Container>
     </ThemeProvider>
   );
