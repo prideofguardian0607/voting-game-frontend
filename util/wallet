@@ -3,6 +3,29 @@
 // const { createAlchemyWeb3 } = require("@alch/alchemy-web3");
 import { ethers } from "ethers";
 
+const toHex = (num) => {
+  const val = Number(num);
+  return "0x" + val.toString(16);
+};
+
+const networkParams = {
+  "80001": {
+    chainId: toHex(80001),
+    rpcUrls: ["https://polygon-mumbai.g.alchemy.com/v2/5UwEOYnZ49VHGOK_js7aSFx0ceM5EYHQ"],
+    chainName: "Polygon Mumbai",
+    nativeCurrency: { name: "MATIC", decimals: 18, symbol: "MATIC" },
+    blockExplorerUrls: ["https://explorer-mumbai.maticvigil.com/"],
+    //iconUrls: ["https://harmonynews.one/wp-content/uploads/2019/11/slfdjs.png"]
+  },
+  "137": {
+    chainId: toHex(137),
+    rpcUrls: ["https://polygon-mainnet.g.alchemy.com/v2/TKkrqc8fjdRX9Jje883Tr11KQJU_lViu"],
+    chainName: "Polygon Mainnet",
+    nativeCurrency: { name: "MATIC", decimals: 18, symbol: "MATIC" },
+    blockExplorerUrls: ["https://polygonscan.com"],
+    //iconUrls: ["https://harmonynews.one/wp-content/uploads/2019/11/slfdjs.png"]
+  },
+};
 
 export const connectWallet = async () => {
     if (window.ethereum) {
@@ -93,4 +116,40 @@ export const getCurrentBalance = async (address) => {
     });
     return ethers.utils.formatEther(balance);
     
+}
+
+
+
+export const swtichNetwork = async (networkId) => {
+  if(window.ethereum) {
+    try {
+      const result = await window.ethereum.request({
+        // method: "net_version"
+        // method: "eth_chainId"
+        method: "wallet_switchEthereumChain",
+        params: [
+          {
+            chainId: toHex(networkId)
+          }
+        ]
+      });
+      return true;
+    } catch(switchError) {
+      if(switchError.code == 4902) {
+        try {
+          await window.ethereum.request({
+            method: "wallet_addEthereumChain",
+            params: [networkParams[networkId + ""]]
+          });
+          return true;
+        } catch(error) {
+          console.log(error);
+          return false;
+        }
+      }
+    }
+    // console.log(result)
+  } else {
+    return false;
+  }
 }

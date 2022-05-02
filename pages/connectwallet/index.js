@@ -14,14 +14,18 @@ import axios from 'axios';
 import Navbar from '../components/navbar';
 import { useState, useEffect } from 'react'
 import { getCurrentWalletConnected, connectWallet, getCurrentBalance, disconnectWallet } from '../../util/wallet'; 
-import { createAlchemyWeb3 } from "@alch/alchemy-web3";
-import { useWeb3 } from "@3rdweb/hooks";
+
 import Loader from './../components/loader';
 import Notification from '../components/notification';
+import ethers from 'ethers';
+import { swtichNetwork } from '../../util/wallet';
 
 const theme = createTheme();
 
 export default function ConnectWallet() {
+
+  const CHAIN_ID = 80001;//80001,137
+
   const [loaderHidden, setLoaderHidden] = React.useState('none');
 
   const [ username, setUsername] = useState('');
@@ -97,14 +101,19 @@ export default function ConnectWallet() {
 
   }
   const Connect = async () => {
-    const walletResponse = await connectWallet();
-    setAddress(walletResponse.address);
-    if(walletResponse.address != '') {
-      let balance = await getCurrentBalance(walletResponse.address)
-      setBalance(balance);
-      setPayAndStartGameEnabled(false);
-      setDisconnectButtonDisabled(false);
-    } 
+
+    if(swtichNetwork(CHAIN_ID)) {
+      const walletResponse = await connectWallet();
+      setAddress(walletResponse.address);
+      if(walletResponse.address != '') {
+        let balance = await getCurrentBalance(walletResponse.address)
+        setBalance(balance);
+        setPayAndStartGameEnabled(false);
+        setDisconnectButtonDisabled(false);
+      }
+    } else {
+
+    }
   }
 
   const Disconnect = async () => {
@@ -138,7 +147,7 @@ export default function ConnectWallet() {
   }, [username]);
 
   useEffect(() => {
-
+    
     const fetchWallet = async () => {
       const {address, status} = await getCurrentWalletConnected();
       setAddress(address);
@@ -152,6 +161,7 @@ export default function ConnectWallet() {
     }
     fetchWallet();
     addWalletListener();
+    
   }, []);
 
   function addWalletListener() { //TODO: implement
