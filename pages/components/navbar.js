@@ -16,7 +16,7 @@ export default function Navbar(props) {
 
     const Logout = () => {
         localStorage.removeItem('token');
-        Router.push('/signin');
+        Router.push('/');
     };
 
     const handleMenu = (event) => {

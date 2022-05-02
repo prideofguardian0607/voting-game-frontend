@@ -11,11 +11,7 @@ const MyApp = ({ Component, pageProps }) => {
                 <Component {...pageProps} />
             {/* </ThirdwebWeb3Provider> */}
             
-            <Button sx={{position: 'absolute', bottom: 10, left: 10}} onClick={
-                () => {
-                    Router.back();
-                }
-            }> {'<<'} Back</Button>
+            
         </>
     )
   }

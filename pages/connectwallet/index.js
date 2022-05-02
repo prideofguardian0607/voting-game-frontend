@@ -298,8 +298,14 @@ export default function ConnectWallet() {
             </Button>
           </Box>
         </Box>
-        <Notification open={openNotify} message={message} severity={severity} handleClose={notifyHandleClose} />  
+        <Notification open={openNotify} duration={3000} message={message} severity={severity} handleClose={notifyHandleClose} />  
       </Container>
+      <Button sx={{position: 'absolute', bottom: 10, left: 10}} onClick={
+          () => {
+            //localStorage.removeItem('token');
+            Router.back();
+          }
+      }> {'<<'} Back</Button>
     </ThemeProvider>
   );
 }

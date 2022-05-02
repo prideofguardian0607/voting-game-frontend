@@ -1,14 +1,8 @@
 import * as React from 'react';
-import Avatar from '@mui/material/Avatar';
 import Button from '@mui/material/Button';
 import CssBaseline from '@mui/material/CssBaseline';
 import TextField from '@mui/material/TextField';
-import FormControlLabel from '@mui/material/FormControlLabel';
-import Checkbox from '@mui/material/Checkbox';
-import Link from 'next/link';
-import Grid from '@mui/material/Grid';
 import Box from '@mui/material/Box';
-import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import Typography from '@mui/material/Typography';
 import Container from '@mui/material/Container';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
@@ -17,6 +11,9 @@ import axios from 'axios'
 import Navbar from '../components/navbar'
 import Loader from './../components/loader';
 import Notification from '../components/notification';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ListItemText from '@mui/material/ListItemText';
 
 const theme = createTheme();
 
@@ -32,6 +29,8 @@ export default function Denomination() {
   const [message, setMessage] = React.useState('');
   const [openNotify, setOpenNotify] = React.useState(false);
   const [severity, setSeverity] = React.useState('success');
+  const [duration, setDuration] = React.useState(3000);
+
   const notifyHandleClose = (event, reason) => {
     if (reason === 'clickaway') {
       return;
@@ -40,6 +39,7 @@ export default function Denomination() {
   };
   const SetAmount2 = () => {
     setAmount(2);
+    ShowWinningPool(2);
     setColor2('success');
     setColor5('primary');
     setColor10('primary');
@@ -48,6 +48,7 @@ export default function Denomination() {
 
   const SetAmount5 = () => {
     setAmount(5);
+    ShowWinningPool(5);
     setColor2('primary');
     setColor5('success');
     setColor10('primary');
@@ -56,12 +57,30 @@ export default function Denomination() {
   }
 
   const SetAmount10 = () => {
-    setAmount(10)
+    setAmount(10);
+    ShowWinningPool(10);
     setColor2('primary');
     setColor5('primary');
     setColor10('success');
     setConfirmAmountButtonEnabled(false);
   }
+
+  const ShowWinningPool = (price) => {
+    setOpenNotify(true);
+    setSeverity('info');
+    setDuration(30000);
+    const win = [0.5, 0.3, 0.2];
+    const content = win.map((w, i) => (
+      <ListItem key={w}>
+        <ListItemText>{i + 1}: {(w * price * 7).toFixed(2)}</ListItemText>
+      </ListItem>
+    ));
+    setMessage((
+      <List>
+        {content}
+      </List>
+    ));
+  };
 
  // confirm amount and go to connect wallet page 
   const ConfirmAmount = () => {
@@ -132,6 +151,9 @@ export default function Denomination() {
     <>
       <Navbar title="Game Denomination" username={username}  />
       <ThemeProvider theme={theme}>
+        <Typography component="h1" sx={{color: 'red', textAlign: 'center', paddingTop: "5%"}} variant="h1">
+          <b>GAME BY IN AMOUNT</b>
+        </Typography>
         <Container component="main" maxWidth="xs">
           <CssBaseline />
           <Box
@@ -179,6 +201,7 @@ export default function Denomination() {
                 label="Own Amount"
                 onChange={(e) => {
                   setAmount(e.target.value);
+                  ShowWinningPool(e.target.value);
                   if(e.target.value > 0) {
                     setConfirmAmountButtonEnabled(false);
                   } else {
@@ -200,7 +223,13 @@ export default function Denomination() {
             </Box>
           </Box>
         </Container>
-        <Notification open={openNotify} message={message} severity={severity} handleClose={notifyHandleClose} />  
+        <Notification open={openNotify} duration={duration} message={message} severity={severity} handleClose={notifyHandleClose} />  
+        <Button sx={{position: 'absolute', bottom: 10, left: 10}} onClick={
+            () => {
+              //localStorage.removeItem('token');
+              Router.push('/');
+            }
+        }> {'<<'} Back</Button>
       </ThemeProvider>    
     </>
   );

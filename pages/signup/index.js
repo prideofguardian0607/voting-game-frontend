@@ -265,9 +265,15 @@ export default function SignUp() {
           </Box>
         </Box>
         
-        <Notification open={open} message={message} severity={severity} handleClose={handleClose} />
+        <Notification open={open} duration={3000} message={message} severity={severity} handleClose={handleClose} />
 
       </Container>
+      <Button sx={{position: 'absolute', bottom: 10, left: 10}} onClick={
+          () => {
+            localStorage.removeItem('token');
+            Router.push('/');
+          }
+      }> {'<<'} Back</Button>
     </ThemeProvider>
   );
 }

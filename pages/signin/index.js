@@ -17,12 +17,15 @@ import Notification from '../components/notification';
 import axios from 'axios'
 import Router from 'next/router'
 import Loader from '../components/loader';
+import { Tooltip } from '@mui/material';
 
 const theme = createTheme();
 
 export default function SignIn() {
 
   const [loaderHidden, setLoaderHidden] = React.useState('none');
+
+  const [title, setTitle] = React.useState('ADMIN');
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -85,6 +88,8 @@ export default function SignIn() {
   };
 // validation
   React.useEffect(async () => {
+    //localStorage.removeItem('token');
+    setTitle(localStorage.getItem('title'));
     let info = await GetUserInfo();
     
     if(info.isLoggedIn) {
@@ -136,6 +141,9 @@ export default function SignIn() {
 
   return (
     <ThemeProvider theme={theme}>
+      <Typography component="h1" sx={{color: 'red', textAlign: 'center', paddingTop: "5%"}} variant="h1">
+        <b>NEW GAME {title} LOG IN</b>
+      </Typography>
       <Container component="main" maxWidth="xs">
         <CssBaseline />
         <Box
@@ -146,33 +154,39 @@ export default function SignIn() {
             alignItems: 'center',
           }}
         >
-          <Avatar sx={{ m: 1, bgcolor: 'secondary.main' }}>
-            <LockOutlinedIcon />
-          </Avatar>
-          <Typography component="h1" variant="h5">
-            Keeper Sign in
-          </Typography>
           <Loader hidden={loaderHidden} />
           <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 1 }}>
-            <TextField
-              margin="normal"
-              required
-              fullWidth
-              id="username"
-              label="Game User Name"
-              name="username"
-              autoFocus
-            />
-            <TextField
-              margin="normal"
-              required
-              fullWidth
-              name="password"
-              label="Password"
+            <Tooltip placement='top' title={
+              <React.Fragment>
+                <Typography color="inherit">Please insert your admin registered username that you used on your initial registration.</Typography>
+              </React.Fragment>
+              }>
+              <TextField
+                margin="normal"
+                required
+                fullWidth
+                id="username"
+                label="Game User Name"
+                name="username"
+                autoFocus
+              />          
+            </Tooltip>
+            <Tooltip placement='top' title={
+              <React.Fragment>
+                <Typography color="inherit">Please enter your admin registered password that you used on your initial registration.</Typography>
+              </React.Fragment>
+                }>
+              <TextField
+                margin="normal"
+                required
+                fullWidth
+                name="password"
+                label="Password"
 
-              id="password"
-              autoComplete="current-password"
-            />
+                id="password"
+                autoComplete="current-password"
+              />
+            </Tooltip>
             {/* <FormControlLabel
               control={<Checkbox value="remember" color="primary" />}
               label="Remember me"
@@ -206,7 +220,13 @@ export default function SignIn() {
         
       </Container>
       
-      <Notification open={openNotify} message={message} severity={severity} handleClose={notifyHandleClose} />  
+      <Notification open={openNotify} duration={3000} message={message} severity={severity} handleClose={notifyHandleClose} />  
+      <Button sx={{position: 'absolute', bottom: 10, left: 10}} onClick={
+          () => {
+            localStorage.removeItem('token');
+            Router.push('/');
+          }
+      }> {'<<'} Back</Button>
     </ThemeProvider>
   );
 }

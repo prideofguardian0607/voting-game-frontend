@@ -26,7 +26,8 @@ export default function SignIn() {
     });
   };
 
-  // useEffect(() => {
+   useEffect(() => {
+     localStorage.setItem('title', 'ADMIN');
   //   const GetStock = async () => {
   //     let response;
   //     try {
@@ -52,7 +53,7 @@ export default function SignIn() {
   //   }
 
   //   GetStock();
-  // }, [])
+   }, [])
 
 
   const information = [
@@ -80,13 +81,18 @@ export default function SignIn() {
 
   const LogIntoGame = () => {
     //location.href = 'signin';
-    Router.push('connectwallet')
+    localStorage.setItem('title', 'PLAYER');
+    Router.push('signin')
   };
   console.log(process.env.API_URL)
 
   return (
     <ThemeProvider theme={theme}>
+      <Typography component="h1" sx={{color: 'red', textAlign: 'center', paddingTop: "5%"}} variant="h1">
+        <b>PLAY TO EARN GAME</b>
+      </Typography>
       <Container component="main" maxWidth="xs">
+        
         <CssBaseline />
         <Box
           sx={{
@@ -97,9 +103,7 @@ export default function SignIn() {
           }}
         >
 
-          <Typography component="h1" variant="h5">
-            Play to earn game
-          </Typography>
+          
           <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 1 }}>
             <Grid container spacing={2}>
               {

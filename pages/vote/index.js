@@ -553,7 +553,7 @@ export default function Vote() {
           </Button>        
         </Box>
       </Container>
-      <Notification open={openNotify} message={message} severity={severity} handleClose={notifyHandleClose} />
+      <Notification open={openNotify} duration={3000} message={message} severity={severity} handleClose={notifyHandleClose} />
       <Dialog open={openDialog} onClose={handleDialogClose}>
         <DialogTitle>Winning Order</DialogTitle>
         <DialogContent sx={{alignItems: 'center', textAlign: 'left'}}>

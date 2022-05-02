@@ -36,9 +36,11 @@ export default function Rule() {
                     ))
                 }
             </List>
-            <Link href='/signup'>
-                <a>BACK</a>
-            </Link>
+            <Button sx={{position: 'absolute', bottom: 10, left: 10}} onClick={
+                () => {
+                    Router.back();
+                }
+            }> {'<<'} Back</Button>
         </>
     )
 }

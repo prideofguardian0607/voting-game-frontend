@@ -511,7 +511,13 @@ export default function Admin() {
                     }} color='primary' variant='outlined'>{buttonName}</Button>
                 </DialogActions>
             </Dialog>      
-            <Notification open={openNotify} message={message} severity={severity} handleClose={notifyHandleClose} />  
+            <Notification open={openNotify} duration={3000} message={message} severity={severity} handleClose={notifyHandleClose} />  
+            <Button sx={{position: 'absolute', bottom: 10, left: 10}} onClick={
+                () => {
+                    localStorage.removeItem('token');
+                    Router.push('/');
+                }
+            }> {'<<'} Back</Button>            
         </ThemeProvider>
         
     );
