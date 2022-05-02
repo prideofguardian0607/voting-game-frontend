@@ -448,9 +448,9 @@ export default function Vote() {
 
   const [openDialog, setOpenDialog] = React.useState(false);
   const handleDialogClose = () => {
-      setOpenDialog(false);
       localStorage.removeItem('token');
       Router.push('signin');
+      setOpenDialog(false);
   };
 
   return (
