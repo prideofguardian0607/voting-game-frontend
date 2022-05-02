@@ -141,7 +141,7 @@ export default function SignIn() {
 
   return (
     <ThemeProvider theme={theme}>
-      <Typography component="h1" sx={{color: 'red', textAlign: 'center', paddingTop: "5%"}} variant="h1">
+      <Typography component="h1" sx={{color: 'black', textAlign: 'center', paddingTop: "5%"}} variant="h1">
         <b>NEW GAME {title} LOG IN</b>
       </Typography>
       <Container component="main" maxWidth="xs">

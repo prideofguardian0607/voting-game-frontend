@@ -178,7 +178,7 @@ export default function Vote() {
               setOpenDialog(true);
             }
           });
-        }, 1000);
+        }, 3000);
 
         return { isLoggedIn: temp_isLogin, code: temp_code };
 
@@ -537,7 +537,7 @@ export default function Vote() {
             })
 
           }
-          <Card sx={{ width: '60%', height: '50%', borderRadius: 15, position: 'absolute', top: '25%', left: '20%', borderColor: 'red', borderWidth: '5px' }} >
+          <Card sx={{ width: '60%', height: '50%', borderRadius: 15, position: 'absolute', top: '25%', left: '20%', borderColor: 'black', borderWidth: '5px' }} >
             <Typography sx={{ display: priceHidden, position: 'absolute', left: '25%',top: '15%', width: '50%', height: '20%', textAlign: 'center'}} variant='h3'>
               1st:{(totalPrice * 0.5).toFixed(2)}
             </Typography>

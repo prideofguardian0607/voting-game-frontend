@@ -151,7 +151,7 @@ export default function Denomination() {
     <>
       <Navbar title="Game Denomination" username={username}  />
       <ThemeProvider theme={theme}>
-        <Typography component="h1" sx={{color: 'red', textAlign: 'center', paddingTop: "5%"}} variant="h1">
+        <Typography component="h1" sx={{color: 'black', textAlign: 'center', paddingTop: "5%"}} variant="h1">
           <b>GAME BY IN AMOUNT</b>
         </Typography>
         <Container component="main" maxWidth="xs">
