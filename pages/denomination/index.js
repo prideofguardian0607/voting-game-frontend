@@ -68,7 +68,7 @@ export default function Denomination() {
   const ShowWinningPool = (price) => {
     setOpenNotify(true);
     setSeverity('info');
-    setDuration(30000);
+    setDuration(10000);
     const win = [0.5, 0.3, 0.2];
     const content = win.map((w, i) => (
       <ListItem key={w}>
