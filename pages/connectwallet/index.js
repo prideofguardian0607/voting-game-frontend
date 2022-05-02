@@ -24,7 +24,7 @@ const theme = createTheme();
 
 export default function ConnectWallet() {
 
-  const CHAIN_ID = 80001;//80001,137
+  const CHAIN_ID = 137;//80001,137
 
   const [loaderHidden, setLoaderHidden] = React.useState('none');
 
@@ -102,7 +102,8 @@ export default function ConnectWallet() {
   }
   const Connect = async () => {
 
-    if(swtichNetwork(CHAIN_ID)) {
+    let res = await swtichNetwork(CHAIN_ID);
+    if(res) {
       const walletResponse = await connectWallet();
       setAddress(walletResponse.address);
       if(walletResponse.address != '') {
@@ -111,9 +112,8 @@ export default function ConnectWallet() {
         setPayAndStartGameEnabled(false);
         setDisconnectButtonDisabled(false);
       }
-    } else {
-
     }
+    
   }
 
   const Disconnect = async () => {
