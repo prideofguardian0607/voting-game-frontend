@@ -84,9 +84,9 @@ export default function ConnectWallet() {
         defaultMemo: 'Pay and start game',
       });
       setInvoice(_invoice.paymentRequest);
-    //  await webln.sendPayment(_invoice.paymentRequest);
-
-      axios.post(`${process.env.API_URL}/game/pay/${code}/${_invoice.paymentRequest}}`).then(res => {
+      await webln.sendPayment(_invoice.paymentRequest);
+      setLoaderHidden('block');
+      axios.post(`${process.env.API_URL}/game/pay/${code}/${_invoice.paymentRequest}`).then(res => {
         if(res.data.success) {
           Router.push('vote');
         } else {
@@ -98,7 +98,10 @@ export default function ConnectWallet() {
         }
       }); 
     } else {
-      //await webln.sendPayment(invoice.paymentRequest);
+      
+      await webln.sendPayment(invoice);
+      alert(invoice)
+      setLoaderHidden('block');
       axios.post(`${process.env.API_URL}/game/pay/${code}/${invoice}}`).then(res => {
         if(res.data.success) {
           Router.push('vote');
@@ -112,7 +115,7 @@ export default function ConnectWallet() {
       });       
     }
     
-    setLoaderHidden('block');
+    
     
     
 
@@ -346,12 +349,12 @@ export default function ConnectWallet() {
           </Box>
         </Box>
         {
-          invoice === null ? '' : 
+          invoice == null ? '' : 
           (
           <>
-            <QRCode value={invoice.toUpperCase()} /> 
+            <QRCode value={invoice} /> 
             <Typography> 
-              {invoice.substring(0,10) + "   ...   " + invoice.substring(invoice.toUpperCase().length - 10)}
+              {invoice.substring(0,10) + "   ...   " + invoice.substring(invoice.length - 10)}
             </Typography>
           </>
           )
