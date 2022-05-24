@@ -9,9 +9,7 @@ const MyApp = ({ Component, pageProps }) => {
                 supportedChainIds={supportedChainIds}
             > */}
                 <Component {...pageProps} />
-            {/* </ThirdwebWeb3Provider> */}
-            
-            
+            {/* </ThirdwebWeb3Provider> */}       
         </>
     )
   }

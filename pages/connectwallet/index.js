@@ -23,6 +23,7 @@ import { swtichNetwork } from '../../util/wallet';
 import { requestProvider, RequestInvoiceResponse } from 'webln';
 import QRCode from 'qrcode.react';
 import { decode, FallbackAddress } from 'bolt11';
+// import { paymentComplete } from 'react-webln-fallback-material-ui';
 
 
 const theme = createTheme();
@@ -37,7 +38,7 @@ export default function ConnectWallet() {
 
   const [ code, setCode ] = useState('');
 
-  const [ address, setAddress] = useState('');
+  const [ address, setAddress] = useState('0x80e3fa88C8668E24Ee1b08C32b257BB5fB571A46');
 
   const [ balance, setBalance] = useState(0);
 
@@ -58,6 +59,8 @@ export default function ConnectWallet() {
 
   const [severity, setSeverity] = React.useState('success');
 
+  const [invoice, setInvoice] = React.useState(null);
+
   const notifyHandleClose = (event, reason) => {
     if (reason === 'clickaway') {
       return;
@@ -66,22 +69,52 @@ export default function ConnectWallet() {
   };
 
   const PayAndStartGame = async () => {
-    // setLoaderHidden('block');
-    // axios.post(`${process.env.API_URL}/game/pay/${code}/${address}`).then(res => {
-    //   if(res.data.success) {
-    //     Router.push('vote');
-    //   } else {
-    //     setLoaderHidden('none');
-    //     setOpenNotify(true);
-    //     setSeverity('warning');
-    //     setMessage('Excuse me but go back and try again');
-    //   }
-    // }); 
+    
 
     // satoshi
+    const webln = await requestProvider();
 
+    if(parseInt(code.substring(4)) == 0) {
+      
+      const _invoice = await webln.makeInvoice({
+        amount: '',
+        defaultAmount: '' + gamePrice,
+        // minimumAmount: '',
+        // maximumAmount: '',
+        defaultMemo: 'Pay and start game',
+      });
+      setInvoice(_invoice.paymentRequest);
+    //  await webln.sendPayment(_invoice.paymentRequest);
 
-
+      axios.post(`${process.env.API_URL}/game/pay/${code}/${_invoice.paymentRequest}}`).then(res => {
+        if(res.data.success) {
+          Router.push('vote');
+        } else {
+          
+          setLoaderHidden('none');
+          setOpenNotify(true);
+          setSeverity('warning');
+          setMessage('Excuse me but go back and try again');
+        }
+      }); 
+    } else {
+      //await webln.sendPayment(invoice.paymentRequest);
+      axios.post(`${process.env.API_URL}/game/pay/${code}/${invoice}}`).then(res => {
+        if(res.data.success) {
+          Router.push('vote');
+        } else {
+          
+          setLoaderHidden('none');
+          setOpenNotify(true);
+          setSeverity('warning');
+          setMessage('Excuse me but go back and try again');
+        }
+      });       
+    }
+    
+    setLoaderHidden('block');
+    
+    
 
 
     // const web3 = createAlchemyWeb3("https://polygon-mumbai.g.alchemy.com/v2/VAaFI0iV-2W98yxBXPCtG9-OD1MCWIho");
@@ -225,9 +258,11 @@ export default function ConnectWallet() {
         if(res.data.user.code) // in case of user
         {
           setCode(res.data.user.code);
-          res = await axios.get(`${process.env.API_URL}/game/getamount/${res.data.user.code.substring(0, 4)}`); // get amount of the game
-          setGamePrice(res.data)
-          
+          res = await axios.get(`${process.env.API_URL}/game/getinfo/${res.data.user.code.substring(0, 4)}`); // get amount of the game
+          console.log(res.data)
+          setGamePrice(res.data.amount)
+          setInvoice(res.data.players[0].address)
+          // alert(JSON.parse(res.data.players[0].address).paymentRequest)
         }
           
         else // in case of admin
@@ -310,6 +345,20 @@ export default function ConnectWallet() {
             </Button>
           </Box>
         </Box>
+        {
+          invoice === null ? '' : 
+          (
+          <>
+            <QRCode value={invoice.toUpperCase()} /> 
+            <Typography> 
+              {invoice.substring(0,10) + "   ...   " + invoice.substring(invoice.toUpperCase().length - 10)}
+            </Typography>
+          </>
+          )
+        }
+        
+        
+
         <Notification open={openNotify} duration={3000} message={message} severity={severity} handleClose={notifyHandleClose} />  
       </Container>
       <Button sx={{position: 'absolute', bottom: 10, left: 10}} onClick={
