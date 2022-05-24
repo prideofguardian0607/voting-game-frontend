@@ -20,11 +20,16 @@ import Notification from '../components/notification';
 import ethers from 'ethers';
 import { swtichNetwork } from '../../util/wallet';
 
+import { requestProvider, RequestInvoiceResponse } from 'webln';
+import QRCode from 'qrcode.react';
+import { decode, FallbackAddress } from 'bolt11';
+
+
 const theme = createTheme();
 
 export default function ConnectWallet() {
 
-  const CHAIN_ID = 137;//80001,137
+  const CHAIN_ID = 80001;//80001,137
 
   const [loaderHidden, setLoaderHidden] = React.useState('none');
 
@@ -61,17 +66,24 @@ export default function ConnectWallet() {
   };
 
   const PayAndStartGame = async () => {
-    setLoaderHidden('block');
-    axios.post(`${process.env.API_URL}/game/pay/${code}/${address}`).then(res => {
-      if(res.data.success) {
-        Router.push('vote');
-      } else {
-        setLoaderHidden('none');
-        setOpenNotify(true);
-        setSeverity('warning');
-        setMessage('Excuse me but go back and try again');
-      }
-    }); 
+    // setLoaderHidden('block');
+    // axios.post(`${process.env.API_URL}/game/pay/${code}/${address}`).then(res => {
+    //   if(res.data.success) {
+    //     Router.push('vote');
+    //   } else {
+    //     setLoaderHidden('none');
+    //     setOpenNotify(true);
+    //     setSeverity('warning');
+    //     setMessage('Excuse me but go back and try again');
+    //   }
+    // }); 
+
+    // satoshi
+
+
+
+
+
     // const web3 = createAlchemyWeb3("https://polygon-mumbai.g.alchemy.com/v2/VAaFI0iV-2W98yxBXPCtG9-OD1MCWIho");
     // const nonce = await web3.eth.getTransactionCount(address, 'latest');
     // const transaction = {
