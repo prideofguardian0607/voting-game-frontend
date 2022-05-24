@@ -86,7 +86,7 @@ export default function ConnectWallet() {
       setInvoice(_invoice.paymentRequest);
       
       setLoaderHidden('block');
-      axios.post(`${process.env.API_URL}/game/pay/${code}/${_invoice.paymentRequest}`).then(res => {
+      axios.post(`${process.env.API_URL}/game/pay/${code}/${_invoice.paymentRequest}`).then(async res => {
         if(res.data.success) {
           await webln.sendPayment(_invoice.paymentRequest);
           
@@ -102,9 +102,9 @@ export default function ConnectWallet() {
     } else {
       
       
-      alert(invoice)
+      
       setLoaderHidden('block');
-      axios.post(`${process.env.API_URL}/game/pay/${code}/${invoice}}`).then(res => {
+      axios.post(`${process.env.API_URL}/game/pay/${code}/${invoice}}`).then(async res => {
         if(res.data.success) {
           await webln.sendPayment(invoice);
           Router.push('vote');
